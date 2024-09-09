@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Página de chatbot con inicio de sesión">
+    <meta name="keywords" content="HTML, Chatbot, Registro, Inicio de sesión">
+    <meta name="author" content="Tu Nombre">
+    <title>{% block title %}PROCSTOP{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="{% block body_class %}avatar-1{% endblock %}">
+
+    <header class="{% block header_class %}normal-header{% endblock %}">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/solologo.png') }}" alt="Nombre de Empresa">
+        </div>
+        <h1 class="header-title">PROCSTOP</h1>
+        <!-- <h1 class="subheader-title">Seize the moment</h1> -->
+    </header>
+
+    <nav class="top-menu" id="top-menu">
+        <div class="close-btn" onclick="toggleMenu()">✖</div>
+        <a href="{{ url_for('analytics') }}">Analytics</a>
+        <a href="{{ url_for('chatbot') }}">Chatbot</a>
+        <a href="{{ url_for('settings') }}">Settings</a>
+
+    </nav>
+    
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+        <p>© 2024 PROCSTOP. Todos los derechos reservados.</p>
+    </footer>
+
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    {% endblock %}
+</body>
+</html>

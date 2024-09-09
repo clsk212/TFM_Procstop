@@ -1,0 +1,519 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    background-size: cover;
+    color: #000000;
+    margin: 0;  /* Asegúrate de que no hay margen externo 10*/ 
+    padding: 0;
+    min-height: 100vh;  /* Altura completa de la ventana de visualización */
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: rgb(77, 10, 10);
+    height: 120px; /* Ajusta según necesidades */
+    width: 100%;
+    position: relative; /* Asegura posicionamiento relativo para elementos internos */
+}
+
+header .logo {
+    position: absolute;
+    top: 10px;
+    left: 30px;
+    z-index: 1011;
+}
+
+header .logo img {
+    height: 100px;
+    width: auto;
+}
+
+header .header-title{
+    color: white;
+    text-align: center;
+    font-size: xxx-large;
+    margin-top: 30px;
+}
+
+/* header .subheader-title{
+    color: white;
+    text-align: center;
+    font-size: large;
+
+} */
+
+
+/* New styles for the top menu */
+.top-menu {
+    display: flex; /* Display the menu items in a row */
+    justify-content: space-around; /* Space the items evenly */
+    background-color: #333; /* Background color for the menu */
+    padding: 10px 0; /* Padding for spacing inside the menu */
+    top: 100%; /* Position it right below the header */
+    width: 100%; /* Ensure the menu spans the full width */
+    z-index: 1020; /* Keep it below the logo */
+}
+
+.top-menu a {
+    color: white; /* Text color */
+    padding: 14px 20px; /* Padding around the links */
+    text-decoration: none; /* Remove underline from links */
+    text-align: center;
+}
+
+.top-menu a:hover {
+    background-color: #575757; /* Change background on hover */
+}
+
+.close-btn {
+    display: none; /* Hide the close button for a horizontal menu */
+}
+
+#welcome-screen a {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 20px;
+    background-color:  rgb(77, 10, 10);  /* Color de fondo verde */
+    color: white;               /* Texto blanco para contraste */
+    text-decoration: none;      /* Eliminar el subrayado */
+    border-radius: 5px;         /* Bordes redondeados */
+    transition: background-color 0.3s; /* Transición suave al cambiar el color */
+}
+
+#welcome-screen a:hover {
+    background-color: #000000;  /* Un tono de verde más oscuro al hacer hover */
+}
+
+.btn-welcome {
+    margin-top: 5cm;  /* Ajuste vertical */
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 20px;
+    background-color: #000000;  /* Color de fondo verde */
+    color: white;               /* Texto blanco para contraste */
+    text-decoration: none;      /* Eliminar el subrayado */
+    border-radius: 5px;         /* Bordes redondeados */
+    transition: background-color 0.3s; /* Transición suave al cambiar el color */
+}
+
+.btn-welcome:hover {
+    background-color: #45a049;  /* Un tono de verde más oscuro al hacer hover */
+}
+
+.centered-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    margin: auto;
+    max-width: 360px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    background-color: #323135;
+}
+
+
+
+footer {
+    background-color:  rgb(77, 10, 10); 
+    color: white;
+    text-align: center;
+    padding: 1em;
+    flex-shrink: 0;
+    width: -webkit-fill-available;
+}
+
+.centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#chatbox {
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+}
+
+.userText span {
+    background-color: #a8ffb9;
+    padding: 10px;
+    border-radius: 2px;
+    align-self: flex-start;
+    width: 50%;
+}
+
+.userText {
+    color: rgb(0, 0, 0);
+    font-family: monospace;
+    font-size: 17px;
+    text-align: right;
+    line-height: 30px;
+}
+
+.botText span {
+    background-color: #50875b;
+    padding: 10px;
+    border-radius: 2px;
+    align-self: flex-start;
+    width: 50%;
+}
+
+.botText {
+    color: white;
+    font-family: monospace;
+    font-size: 17px;
+    text-align: left;
+    line-height: 30px;
+}
+
+/* botones setting */
+button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #000000;
+}
+
+
+div.close-btn {
+    text-align: right;
+    cursor: pointer;
+}
+
+/* Contenedor principal del inicio de sesión */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 400px;
+    margin: auto;
+    padding: 40px;
+    background-color: #ffffff;
+    border: 2px solid rgb(77, 10, 10); /* Borde granate */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Título del formulario */
+.login-container h2 {
+    font-size: xx-large;
+    font-weight: bold;
+    color: rgb(77, 10, 10);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Estilo de los inputs */
+.login-container input[type="text"],
+.login-container input[type="password"] {
+    width: 100%; /* Ocupa todo el ancho disponible */
+    padding: 12px;
+    margin: 10px 0; /* Separación entre inputs */
+    border: 1px solid rgb(77, 10, 10); /* Borde granate */
+    border-radius: 5px;
+    box-sizing: border-box; /* Asegura que padding y ancho sean consistentes */
+    font-size: 16px;
+    background-color: #f9f9f9; /* Fondo suave */
+}
+
+/* Estilo del botón de envío */
+.login-container input[type="submit"] {
+    background-color: #4CAF50; /* Color verde */
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%; /* Alineado con los inputs */
+    margin-top: 20px;
+    transition: background-color 0.3s ease; /* Suave transición al cambiar de color */
+}
+
+/* Hover para el botón */
+.login-container input[type="submit"]:hover {
+    background-color: #45a049; /* Verde más oscuro en hover */
+}
+
+/* Estilo para las etiquetas */
+.login-container label {
+    font-size: medium;
+    margin-bottom: 5px;
+    color: rgb(77, 10, 10); /* Color granate */
+    width: 100%;
+    text-align: left; /* Alineación del texto de las etiquetas */
+}
+
+/* Fondo del cuerpo de la página */
+body {
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Para centrar el formulario */
+.centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Contenedor para alinear los botones en una columna */
+.register-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 80%;
+    margin: auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border: 2px solid rgb(77, 10, 10); /* Borde granate como el header */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Estilo para el formulario */
+.register-container form {
+    display: flex;
+    flex-direction: column; /* Asegura que los inputs estén en columna vertical */
+    align-items: center;
+    width: 100%;
+}
+
+/* Estilo uniforme para los campos de entrada y botones */
+.register-container input[type="text"],
+.register-container input[type="email"],
+.register-container input[type="password"],
+.register-container button[type="submit"] {
+    width: 60%; /* Cambiado a 80% del ancho */
+    padding: 10px; /* Espaciado interno */
+    margin: 10px 0; /* Separación entre elementos */
+    border: 1px solid rgb(77, 10, 10); /* Borde granate */
+    border-radius: 5px;
+    box-sizing: border-box; /* Asegura que padding y ancho sean consistentes */
+}
+
+/* Estilo para el botón de registrarse */
+.register-container button[type="submit"] {
+    background-color: #4CAF50; /* Color verde */
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+    width: 80%; /* Alineado con los inputs */
+}
+
+.register-container button[type="submit"]:hover {
+    background-color: #45a049; /* Un verde más oscuro en hover */
+}
+
+/* Estilo para las etiquetas */
+.register-container form label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    width: 60%; /* Alineado con los inputs */
+    text-align: left; /* Alineación del texto de las etiquetas */
+    font-size: medium;
+}
+
+.container, .login-container, .register-container, .settings-container, .analytics-container, .chat-container {
+    width: 100%; /* Ocupa todo el ancho del contenedor padre */
+    max-width: 1650px; /* Tamaño máximo en ancho del contenedor */
+    margin: auto; /* Centra el contenedor horizontalmente */
+    padding: 20px; /* Añade espacio interno */
+    background-color: rgb(255, 255, 255);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgb(93, 2, 2);
+    max-height: 50vh; /* Tamaño máximo en altura relativo al viewport */
+    overflow-y: auto; /* Habilita el desplazamiento si el contenido sobrepasa el tamaño máximo */
+}
+
+element.style {
+    display: grid;
+}
+
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgb(93, 2, 2);
+    margin-top: 15px;
+}
+
+.settings-form {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px; /* Separación inferior entre el formulario y los botones */
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    width: 48%; /* Cada columna ocupa un 48% del ancho del formulario */
+}
+
+.form-column label {
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.form-column input, .form-column select {
+    padding: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Botón de actualizar configuraciones horizontal y largo */
+.form-actions {
+    width: 100%;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.btn-update-long:hover {
+    background-color: #333;
+}
+
+/* Estilo para la página de bienvenida */
+.welcome-body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: url('../images/logo2.png') no-repeat center center;
+    background-size: cover;
+}
+
+h1 {
+    color: white;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.btn-welcome {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-welcome:hover {
+    background-color: #555;
+}
+
+
+input#userInput {
+    width: 80%;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    height: 40px;
+}
+
+
+/* Botones en fila horizontal */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.btn-action {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-action:hover {
+    background-color: #bbb;
+}
+
+.btn-delete {
+    background-color: #ff4c4c;
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background-color: #ff1c1c;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh; /* Altura mínima para asegurar que el contenido no quede pegado al header o footer */
+    width: 100%;
+}
+
+
+input[type="submit"] {
+    background-color: #000000;
+    color: rgb(255, 255, 255);
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+}
+
+input[type="submit"]:hover {
+    background-color: #000000;
+    display: grid;
+}
+
+#chatbox {
+    height: 100%;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+.userText span {
+    background-color: #b6f89c;
+    padding: 10px;
+    border-radius: 2px;
+}

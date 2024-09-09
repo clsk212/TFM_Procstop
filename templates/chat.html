@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot con Flask y OpenAI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f8; margin: 0; padding: 10px; }
+        .chat-container { width: 100%; max-width: 400px; background: white; margin: 20px auto; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
+        #chat-log { height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+        .message { padding: 5px; margin-bottom: 5px; border-radius: 5px; }
+        .user { text-align: right; }
+        .user .content { background-color: #007bff; color: white; display: inline-block; padding: 5px 10px; border-radius: 12px; }
+        .bot { text-align: left; }
+        .bot .content { background-color: #e9e9eb; display: inline-block; padding: 5px 10px; border-radius: 12px; }
+        form { display: flex; margin-top: 10px; }
+        input[type="text"], button { height: 40px; border: none; padding: 0 10px; }
+        input[type="text"] { flex-grow: 1; border-radius: 8px; margin-right: 10px; }
+        button { background-color: #007bff; color: white; border-radius: 8px; padding: 0 20px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-log"></div>
+        <form id="chat-form">
+            <input type="text" id="message-input" placeholder="Escribe tu mensaje aquí..." autocomplete="off" required>
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const chatLog = document.getElementById('chat-log');
+
+        chatForm.onsubmit = function(event) {
+            event.preventDefault();
+            const message = messageInput.value.trim();
+            if (message) {
+                messageInput.value = ''; // Clear input box
+                displayMessage(message, 'user');
+                // Enviar post
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                })
+                .then(response => response.json())
+                .then(data => displayMessage(data.reply, 'bot'))
+                .catch(error => console.error('Error:', error));
+            }
+        };
+
+        function displayMessage(message, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + sender;
+            const content = document.createElement('div');
+            content.className = 'content';
+            content.textContent = message;
+            messageDiv.appendChild(content);
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
+        }
+
+        // Allow pressing enter to send message
+        messageInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
