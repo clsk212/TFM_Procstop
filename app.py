@@ -1,5 +1,5 @@
 ############## PROCSTOP BACKEND ###################################################################################################################################################################
-
+# -*- coding: utf-8 -*-
 # Local imports
 import random
 from datetime import timedelta
@@ -11,7 +11,6 @@ from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
 from flask import flash
 from bson import ObjectId
-from transformers import pipeline
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import pymongo
@@ -88,7 +87,7 @@ def login():
         else:
             session['login_attempts'] += 1
             if session['login_attempts'] > 5:
-                flash('Has alcanzado el número máximo de intentos de inicio de sesión. Inténtalo de nuevo más tarde.', 'danger')
+                flash('Has alcanzado el número máximo de intentos de inicio de sesion. Intentalo de nuevo mas tarde.', 'danger')
                 return render_template('login.html'), 429
             else:
                 flash('Usuario o contraseña incorrectos.', 'danger')
@@ -331,4 +330,4 @@ def analytics():
         return str(e)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
