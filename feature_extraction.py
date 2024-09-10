@@ -1,8 +1,14 @@
+# Third party imports
 from transformers import pipeline
-from pprint import pprint
 
-class FeatureExtraction:
+class FeatureExtractor:
+    """
+    Feature extraction from user's messages, including entities, emotion and sentiment.
+    """
     def __init__(self, text):
+        """
+        Initialize feature extractor
+        """
         self.text = text
 
         self.entity_extractor = pipeline("token-classification", model="PlanTL-GOB-ES/roberta-base-bne-capitel-ner-plus")
@@ -19,12 +25,15 @@ class FeatureExtraction:
         }
     
     def get_entities(self):
+        """
+        Extract entities from the text and format it as a dictionary
+        """
         raw_entities = self.entity_extractor(self.text)
         self.clean_entities(raw_entities)
         return self.entities
 
     def clean_entities(self, raw_entities):
-        # Diccionario para mapear los tipos de entidades a los nombres usados en self.entities
+        # Master dictionary to format entities
         master_entities = {
             'PER': 'people',
             'LOC': 'places',
@@ -32,20 +41,21 @@ class FeatureExtraction:
             'OTH': 'others'
         }
 
-        # Inicializa una variable para guardar entidades compuestas temporalmente
+        # Initialize list to join multiple entities
         current_entity = []
 
-        # Iterar a través de las entidades crudas
+        # Iteration over raw entities to extract them
         new_word = True
         for entity in raw_entities:
-            word = self.text[entity['start']:entity['end']]  # Extrae la palabra de la posición indicada
-            entity_prefix = entity['entity'][0]  # B, I, E, S
-            entity_type = entity['entity'][2:]  # PER, LOC, ORG, OTH
+            word = self.text[entity['start']:entity['end']]
+            entity_prefix = entity['entity'][0]
+            entity_type = entity['entity'][2:]
             current_type = master_entities[entity_type]
             if new_word:
-
-                if entity_prefix == 'S':  # Si es el comienzo de una entidad o una entidad singular
-                    self.entities[current_type].append(word)
+                # Singular entities
+                if entity_prefix == 'S':
+                    self.entities[current_type].append(word) 
+                # Beggining of multiple entities
                 elif entity_prefix == 'B':
                     current_entity.append(word)
                     new_word = False
@@ -53,12 +63,16 @@ class FeatureExtraction:
                     continue
             else:
                 current_entity.append(word)
+                # End of multiple entities
                 if entity_prefix == 'E':
                     self.entities[current_type].append(" ".join(current_entity))
                     current_entity = []
                     new_word = True
 
     def get_emotion(self):
+        """
+        Extract emotion from user's input message
+        """
         emotions = self.emotion_extractor(self.text)
         if  emotions[0]['label']== 'others':
             self.emotion = 'neutral'
@@ -67,6 +81,9 @@ class FeatureExtraction:
         return self.emotion
     
     def get_sentiment(self):
+        """
+        Extract sentiment from user's input message
+        """
         sentiments = self.sentiment_extractor(self.text)
         sentiment_master = {
             'POS': 'positivo',
@@ -78,17 +95,17 @@ class FeatureExtraction:
 
 
 
-def feature_extraction(message):
+def feature_extraction(user_input):
     """
-    Extract emotions, entities, and places from the message.
+    Extract emotions, entities, and sentiment from the user's input.
 
-    Parameters:
-    message (str): The text message to process.
+    Args:
+        user_input (str): The text message to process.
 
     Returns:
-    dict: A dictionary with extracted features.
+        features_dict: A dictionary with extracted features.
     """
-    featurer = FeatureExtraction(text = message)
+    featurer = FeatureExtractor(text = user_input)
     featurer.get_entities()
     featurer.get_emotion()
     featurer.get_sentiment()

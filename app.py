@@ -13,6 +13,9 @@ from flask import flash
 from bson import ObjectId
 from transformers import pipeline
 from dotenv import load_dotenv
+from pymongo import MongoClient
+import pymongo
+
 TF_ENABLE_ONEDNN_OPTS=0
 
 # Project imports
@@ -20,21 +23,25 @@ from chatbot import Chatbot
 from feature_extraction import feature_extraction
 from settings import *
  
+load_dotenv()
 # Flask app configuration
 app = Flask(__name__)
-load_dotenv()
-app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+
+uri = os.getenv("MONGO_URI")
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config["API_KEY"] = os.getenv("API_KEY")
 app.config['SESSION_PERMANENT'] = True
 app.permanent_session_lifetime = timedelta(minutes=60)
 
 # Database configuration
-mongo = PyMongo(app)
+# mongo = PyMongo(app)
+client = MongoClient(uri,server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True) )
+db = client['procstop']
+
 bcrypt = Bcrypt(app)
 
 # Chatbot initialization
-procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", mongo = mongo)
+procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", db = db)
 
 def hash_password(password):
     """
@@ -70,13 +77,13 @@ def login():
         password = request.form.get('password')
  
         # User verification
-        user = mongo.db.users.find_one({'username': username})
+        user = db.users.find_one({'username': username})
         if user and bcrypt.check_password_hash(user['password'], password):
             session['username'] = username
             session['user_id'] = str(user['_id'])
             procstop.user_id = str(user['_id'])
             session.pop('login_attempts', None)
-            procstop.start_conver(mongo, username)
+            procstop.start_conver()
             return redirect(url_for('chatbot'))
         else:
             session['login_attempts'] += 1
@@ -107,12 +114,12 @@ def signup():
         form_data = {'fullname': fullname, 'username': username, 'email': email}
         
         # Email not used verification
-        if mongo.db.users.find_one({'email': email}):
+        if db.users.find_one({'email': email}):
             flash('Este correo electrónico ya está registrado.', 'error')
             return render_template('signup.html', error="Este correo electrónico ya está registrado.", form_data=form_data)
         
          # Username not used verification
-        existing_user = mongo.db.users.find_one({'username': username})
+        existing_user = db.users.find_one({'username': username})
         if existing_user:
             flash('El nombre de usuario ya está en uso.', 'error')
             return render_template('signup.html', error="Usuario ya existe", form_data=form_data)
@@ -126,7 +133,7 @@ def signup():
         hashed_password = hash_password(password)
 
         # User registration in mongo
-        mongo.db.users.insert_one({
+        db.users.insert_one({
             'fullname': fullname, 
             'email': email, 
             'username': username, 
@@ -175,8 +182,8 @@ def chat():
     """
     # User definition
     username = session.get('username')
-    if procstop.user is None:
-        procstop.user = username
+    if procstop.user_id is None:
+        procstop.user_id = username
 
     # Input message form
     user_message = request.json.get("message")
@@ -187,7 +194,7 @@ def chat():
     features_dict = feature_extraction(user_message)
 
     # Update conversation context
-    # procstop.update_context()
+    procstop.update_context(features_dict)
 
     # Response message from procstop with exceptions
     try:
@@ -200,7 +207,7 @@ def chat():
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
     # Save conversation data to mongo
-    update_result = procstop.save_conver(mongo, user_message, response, features_dict)
+    update_result = procstop.save_conver(db, user_message, response, features_dict)
     return jsonify({"reply": response, "update_status": update_result.modified_count})
 
 @app.route('/settings', methods=['GET', 'POST'])
@@ -222,7 +229,7 @@ def settings():
         confirm_password = request.form.get('confirm_password')
 
         # Duplicated username verification
-        existing_user = mongo.db.users.find_one({'username': username, '_id': {'$ne': ObjectId(user_id)}})
+        existing_user = db.users.find_one({'username': username, '_id': {'$ne': ObjectId(user_id)}})
         if existing_user:
             flash('El nombre de usuario ya está en uso. Elige otro.', 'danger')
             return redirect(url_for('settings'))
@@ -245,13 +252,13 @@ def settings():
             update_data['password'] = hashed_password
 
         # User data update in mongo
-        mongo.db.users.update_one({'_id': ObjectId(user_id)}, {'$set': update_data})
+        db.users.update_one({'_id': ObjectId(user_id)}, {'$set': update_data})
 
         flash('Cambios actualizados con éxito.', 'success')
         return redirect(url_for('settings'))
 
     # Get old user settings
-    user_settings = get_user_settings(mongo, user_id)
+    user_settings = get_user_settings(db, user_id)
     return render_template('settings.html', settings=user_settings)
 
 @app.route('/delete_data', methods=['POST'])
@@ -267,8 +274,8 @@ def delete_data():
     user_id = session['user_id']
 
     # Data deletion
-    mongo.db.conversations.delete_many({'user_id': user_id})
-    mongo.db.settings.delete_one({'user_id': user_id})
+    db.conversations.delete_many({'user_id': user_id})
+    db.settings.delete_one({'user_id': user_id})
     flash('Todos tus datos han sido borrados.', 'success')
 
     return redirect(url_for('settings'))
@@ -286,7 +293,7 @@ def delete_account():
     user_id = session['user_id']
 
     # Account deletion
-    mongo.db.users.delete_one({"_id": user_id})
+    db.users.delete_one({"_id": user_id})
     session.clear()
 
     return redirect(url_for('welcome'))
