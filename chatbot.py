@@ -9,7 +9,7 @@ class Chatbot:
     """
     Chatbot logic including bot response and db management
     """
-    def __init__(self, api_key, language="ES", model="gpt-4", db=None):
+    def __init__(self, api_key, language="ES", model="gpt-4", db=None, gender='Other'):
         """
         Chatbot object initialization
 
@@ -27,12 +27,13 @@ class Chatbot:
         self.db = db
         self.language = language
         self.start_time = datetime.now()
+        self.gender = gender
         self.context = {
             "emotions": [],
             "people": [],
             "places": [],
             "orgs": [],
-            "conversation": []
+            "emotion_trigger": None
         }
           
     def start_conver(self):
@@ -65,6 +66,16 @@ class Chatbot:
 
     #     return emotion_labels, emotion_data, hobby_labels, hobby_data
 
+    def is_ready_for_recommendation(self):
+        """
+        Check if there exist enough entities and emotions detected in the chat to recommend activities
+        """
+        enough_emotion_info = len(self.context['emotions']) >= 3
+        enough_entity_info = any(len(self.context[entity]) > 0 for entity in ['people', 'places', 'orgs'])
+        
+        return enough_emotion_info and enough_entity_info
+
+
     def update_context(self, features_dict):
         """
         Update conversation context to get a better bot response
@@ -72,30 +83,27 @@ class Chatbot:
         Args:
             features_dict (dict): Detected features on user's input message
         """
-        self.context['emotions'].extend((features_dict['emotion'],features_dict['sentiment'] ))
-        self.context['places'].extend((features_dict['entities']['places'],features_dict['sentiment'] ))
-        self.context['people'].extend((features_dict['entities']['people'],features_dict['sentiment'] ))
-        self.context['orgs'].extend((features_dict['entities']['orgs'],features_dict['sentiment'] ))
+        self.context['emotions'].extend([f"{features_dict['emotion']} ({features_dict['sentiment']})"])
+        self.context['places'].extend([f"{place} ({features_dict['sentiment']})" for place in features_dict['entities']['places']])
+        self.context['people'].extend([f"{person} ({features_dict['sentiment']})" for person in features_dict['entities']['people']])
+        self.context['orgs'].extend([f"{org} ({features_dict['sentiment']})" for org in features_dict['entities']['orgs']])
         
-    def redact_context(self):
+    def get_system_role(self):
         """
         Context formatting as system role for the chatbot input
         """
         context_description = "\n".join([
+            f"- Género del usuario {self.gender}",
             f"- Emociones detectadas en el chat: {', '.join(self.context['emotions'])}",
             f"- Personas mencionadas previamente: {', '.join(self.context['people'])}",
             f"- Lugares mencionados previamente: {', '.join(self.context['places'])}",
             f"- Empresas mencionadas previamente: {', '.join(self.context['orgs'])}",
             ])
-        # return f"Eres un psicólogo que ayuda a los pacientes en base a su estado emocional y a hobbies y personas mencionadas previamente, \
-        #   los cuales tienen asociado un valor de sentimiento. Tu metodología consiste en primero entender cómo se siente el pasciente y, posteriormente, \
-        #   recomendar actividades que le ayuden a mejorar su estado emocional. En el caso de no tener información sobre emociones, hobbies, personas, \
-        #   recomienda actividades en función de las emociones detectadas en la conversación. Responde al paciente en no más de 50 tokens, teniendo en cuenta la \
-        #   siguiente información: \n{context_description}"
-    
-        system_role = f"Eres un psicólogo especializado en pacientes con procastinación y overthinking. Proporciona un lugar seguro para expresarse al paciente y, cuando tengas los datos necesarios sobre su estado emocional y la causa, tras varios mensajes, recomiendale actividades que puedan ayudarle. Responde en un **máximo de 50 tokens** y ten en cuenta el siguiene contexto del paciente, que incluye entidades relacionadas con el paciente y el sentimiento asociado en conversaciones previas: {context_description}"
-        
-        print(system_role)
+
+        if self.is_ready_for_recommendation():
+            system_role = f"Eres un psicólogo especializado que ahora proporciona recomendaciones de actividades basadas en un análisis detallado de las emociones y situaciones en el contexto del usuario. Su contexto es: {context_description} "
+        else:
+            system_role = f"Eres un psicólogo especializado que está recogiendo información sobre el estado emocional del usuario y las situaciones que lo rodean para entender mejor cómo ayudar. Por ahora, el contexto del usuario es: {context_description}"
 
         return system_role
 
@@ -148,7 +156,7 @@ class Chatbot:
         """
         try: 
             # Redact system role with context
-            system_prompt = self.redact_context()
+            system_prompt = self.get_system_role()
 
             # Query the chatbot for a response
             response = self.client.chat.completions.create(

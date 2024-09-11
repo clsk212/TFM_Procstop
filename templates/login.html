@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section id="inicio-sesion">
+<section id="inicio-sesion" style="
+        margin-bottom: 12px;
+        margin-top: 12px;
+        ">
     <div class="login-container centered-container">
         <h2>Iniciar Sesión</h2>
         <form action="{{ url_for('login') }}" method="post">

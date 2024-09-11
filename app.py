@@ -52,7 +52,8 @@ def hash_password(password):
     Return:
         encrypted_password (str): Encrypted user's password
     """
-    return bcrypt.generate_password_hash(password).decode('utf-8')
+    encrypted_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    return encrypted_password
 
 @app.route('/')
 def welcome():
@@ -81,6 +82,7 @@ def login():
             session['username'] = username
             session['user_id'] = str(user['_id'])
             procstop.user_id = str(user['_id'])
+            procstop.gender = str(user['gender'])
             session.pop('login_attempts', None)
             procstop.start_conver()
             return redirect(url_for('chatbot'))
@@ -135,7 +137,8 @@ def signup():
         db.users.insert_one({
             'fullname': fullname, 
             'email': email, 
-            'username': username, 
+            'username': username,
+            'user_id': procstop.user_id,
             'password': hashed_password,
             'age': age,
             'gender': gender,
@@ -193,10 +196,12 @@ def chat():
     features_dict = feature_extraction(user_message)
 
     # Update conversation context
+    print(">>>>>>>>>>>>>>> Let's update")
     procstop.update_context(features_dict)
-
+    print("<<<<<<<<<<<<<<< Update finished")
     # Response message from procstop with exceptions
     try:
+        print(">>>>>>>>> ")
         response = procstop.get_response(user_message)
     except TimeoutError:
         return jsonify({"error": "The chatbot service is temporarily unavailable. Please try again later."}), 503
@@ -297,14 +302,74 @@ def delete_account():
 
     return redirect(url_for('welcome'))
 
-@app.route('/logout', methods=['GET'])
+@app.route('/delete_data', methods=['POST'])
+@app.route('/delete_data', methods=['POST'])
+def delete_user_data():
+    try:
+        # Obtener el user_id de la sesión
+        user_id = session.get('user_id')
+
+        if not user_id:
+            flash('Usuario no encontrado en la sesión.', 'error')
+            return redirect(url_for('settings'))  # Redirigir si no hay usuario en sesión
+
+        # Borrar todas las conversaciones asociadas a este usuario en la colección "conversations"
+        result = db.conversations.delete_many({'user_id': user_id})
+
+        # Verificar cuántos documentos fueron eliminados
+        if result.deleted_count > 0:
+            flash(f'Se han eliminado {result.deleted_count} conversaciones.', 'success')
+        else:
+            flash('No se encontraron datos para eliminar.', 'info')
+
+        return redirect(url_for('settings'))  # Redirigir a la página de configuraciones
+
+    except Exception as e:
+        flash(f'Ocurrió un error: {str(e)}', 'error')
+        return redirect(url_for('settings'))
+
+@app.route('/delete_account', methods=['POST'])
+def delete_user_account():
+    try:
+        # Obtener el user_id de la sesión
+        user_id = session['user_id']
+
+        if not user_id:
+            flash('Usuario no encontrado en la sesión.', 'error')
+            return redirect(url_for('settings'))  # Redirigir si no hay usuario en sesión
+
+        # Borrar todas las conversaciones asociadas a este usuario en la colección "conversations"
+        conversations_result = db.conversations.delete_many({'user_id': user_id})
+
+        # Borrar el usuario de la colección "users"
+        user_result = db.users.delete_one({'_id': user_id})
+
+        # Verificar si se eliminó el usuario
+        if user_result.deleted_count == 1:
+            flash('Tu cuenta y todos tus datos han sido eliminados exitosamente.', 'success')
+        else:
+            flash('No se pudo encontrar o eliminar la cuenta del usuario.', 'error')
+            return redirect(url_for('settings'))
+
+        # Limpiar la sesión del usuario (cerrar sesión)
+        session.clear()
+
+        return redirect(url_for('index'))  # Redirigir a la página principal
+
+    except Exception as e:
+        flash(f'Ocurrió un error: {str(e)}', 'error')
+        return redirect(url_for('settings'))
+    
+@app.route('/logout', methods=['POST'])
 def logout():
-    """
-    Logout backend
-    """
-    # User logout
-    session.clear() 
-    return redirect(url_for('login'))
+    # Limpiar la sesión del usuario
+    session.clear()
+
+    # Mensaje de confirmación
+    flash('Has cerrado sesión exitosamente.', 'success')
+
+    # Redirigir a la página de bienvenida (inicio de sesión o registro)
+    return redirect(url_for('welcome'))
 
 @app.route('/analytics')
 def analytics():

@@ -115,6 +115,61 @@ header .header-title{
     background-color: #323135;
 }
 
+.register-container {
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.register-form {
+    display: flex;
+    justify-content: space-between; /* Alinea las columnas de manera uniforme */
+    flex-wrap: wrap; /* Permite que el contenido se envuelva si es necesario */
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 45%; /* Ajusta el tamaño base de cada columna */
+}
+
+.register-container label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.register-container input,
+.register-container select {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.form-submit-full-width {
+    width: 100%; /* Asegura que el botón ocupe todo el ancho */
+    display: flex; /* Centra el botón en la dirección horizontal */
+}
+
+.register-container button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    flex-grow: 1; /* Permite que el botón crezca para llenar el espacio */
+}
+
+.register-container button:hover {
+    background-color: #0056b3;
+}
 
 
 footer {
@@ -155,21 +210,33 @@ footer {
     line-height: 30px;
 }
 
-.botText span {
-    background-color: #50875b;
-    padding: 10px;
-    border-radius: 2px;
-    align-self: flex-start;
-    width: 50%;
+.userText, .botText {
+    display: flex; /* Usa flexbox para alinear los contenidos */
+    justify-content: flex-end; /* Alinea a la derecha los textos del usuario */
+    padding: 5px 10px; /* Espaciado interno */
+}
+
+.userText span, .botText span {
+    display: block; /* Hace que el span sea un bloque para llenar el espacio */
+    background-color: #a8ffb9; /* Fondo claro para texto de usuario */
+    color: black; /* Color de texto */
+    padding: 8px 12px; /* Espaciado interno del mensaje */
+    border-radius: 10px; /* Bordes redondeados */
+    max-width: 75%; /* Máximo ancho del mensaje */
+    word-wrap: break-word; /* Ajusta palabras que no caben en una línea */
+    text-align: left; /* Alineación del texto */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra ligera para resaltar */
 }
 
 .botText {
-    color: white;
-    font-family: monospace;
-    font-size: 17px;
-    text-align: left;
-    line-height: 30px;
+    justify-content: flex-start; /* Alinea a la izquierda los textos del bot */
 }
+
+.botText span {
+    background-color: #50875b; /* Fondo oscuro para texto del bot */
+    color: white; /* Color de texto blanco para contraste */
+}
+
 
 /* botones setting */
 button {
@@ -210,7 +277,7 @@ div.close-btn {
 .login-container h2 {
     font-size: xx-large;
     font-weight: bold;
-    color: rgb(77, 10, 10);
+    color: rgb(0, 0, 0);
     margin-bottom: 20px;
     text-align: center;
 }
@@ -221,7 +288,7 @@ div.close-btn {
     width: 100%; /* Ocupa todo el ancho disponible */
     padding: 12px;
     margin: 10px 0; /* Separación entre inputs */
-    border: 1px solid rgb(77, 10, 10); /* Borde granate */
+    border: 1px solid rgb(0, 0, 0); /* Borde granate */
     border-radius: 5px;
     box-sizing: border-box; /* Asegura que padding y ancho sean consistentes */
     font-size: 16px;
@@ -251,7 +318,7 @@ div.close-btn {
 .login-container label {
     font-size: medium;
     margin-bottom: 5px;
-    color: rgb(77, 10, 10); /* Color granate */
+    color: rgb(0, 0, 0); /* Color granate */
     width: 100%;
     text-align: left; /* Alineación del texto de las etiquetas */
 }
@@ -286,15 +353,13 @@ body {
     margin: auto;
     padding: 20px;
     background-color: #ffffff;
-    border: 2px solid rgb(77, 10, 10); /* Borde granate como el header */
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 /* Estilo para el formulario */
 .register-container form {
-    display: flex;
-    flex-direction: column; /* Asegura que los inputs estén en columna vertical */
+    flex-direction: row; /* Asegura que los inputs estén en columna vertical */
     align-items: center;
     width: 100%;
 }
@@ -304,10 +369,7 @@ body {
 .register-container input[type="email"],
 .register-container input[type="password"],
 .register-container button[type="submit"] {
-    width: 60%; /* Cambiado a 80% del ancho */
-    padding: 10px; /* Espaciado interno */
     margin: 10px 0; /* Separación entre elementos */
-    border: 1px solid rgb(77, 10, 10); /* Borde granate */
     border-radius: 5px;
     box-sizing: border-box; /* Asegura que padding y ancho sean consistentes */
 }
@@ -338,7 +400,7 @@ body {
     font-size: medium;
 }
 
-.container, .login-container, .register-container, .settings-container, .analytics-container, .chat-container {
+.container, .login-container, .settings-container, .analytics-container, .chat-container {
     width: 100%; /* Ocupa todo el ancho del contenedor padre */
     max-width: 1650px; /* Tamaño máximo en ancho del contenedor */
     margin: auto; /* Centra el contenedor horizontalmente */
@@ -391,6 +453,8 @@ element.style {
     font-size: 14px;
     box-sizing: border-box;
 }
+
+
 
 /* Botón de actualizar configuraciones horizontal y largo */
 .form-actions {
