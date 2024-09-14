@@ -6,7 +6,7 @@ from datetime import timedelta
 import os
 
 # Third party imports
-from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash
+from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory, make_response
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
 from flask import flash
@@ -21,7 +21,8 @@ TF_ENABLE_ONEDNN_OPTS=0
 from chatbot import Chatbot
 from feature_extraction import feature_extraction
 from settings import *
- 
+from analytics import *
+
 load_dotenv()
 # Flask app configuration
 app = Flask(__name__)
@@ -33,7 +34,6 @@ app.config['SESSION_PERMANENT'] = True
 app.permanent_session_lifetime = timedelta(minutes=60)
 
 # Database configuration
-# mongo = PyMongo(app)
 client = MongoClient(uri,server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True) )
 db = client['procstop']
 
@@ -41,6 +41,7 @@ bcrypt = Bcrypt(app)
 
 # Chatbot initialization
 procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", db = db)
+analyzer = DataAnalyzer(db=db, conversation_id=procstop.conversation_id)
 
 def hash_password(password):
     """
@@ -75,13 +76,17 @@ def login():
         # Login form definition
         username = request.form.get('username')
         password = request.form.get('password')
- 
+
         # User verification
         user = db.users.find_one({'username': username})
         if user and bcrypt.check_password_hash(user['password'], password):
             session['username'] = username
             session['user_id'] = str(user['_id'])
-            procstop.user_id = str(user['_id'])
+            procstop.user_id = ObjectId(user['_id'])
+            analyzer.user_id = procstop.user_id
+            procstop.username = username
+            analyzer.username = username
+            print(f'Username {username}\nUser_ID: {procstop.user_id}')
             procstop.gender = str(user['gender'])
             session.pop('login_attempts', None)
             procstop.start_conver()
@@ -138,12 +143,11 @@ def signup():
             'fullname': fullname, 
             'email': email, 
             'username': username,
-            'user_id': procstop.user_id,
             'password': hashed_password,
             'age': age,
             'gender': gender,
             'country': country,
-            'language': language
+            'language': 'Español'
         })
         
       # Login redirection
@@ -196,12 +200,10 @@ def chat():
     features_dict = feature_extraction(user_message)
 
     # Update conversation context
-    print(">>>>>>>>>>>>>>> Let's update")
     procstop.update_context(features_dict)
-    print("<<<<<<<<<<<<<<< Update finished")
+
     # Response message from procstop with exceptions
     try:
-        print(">>>>>>>>> ")
         response = procstop.get_response(user_message)
     except TimeoutError:
         return jsonify({"error": "The chatbot service is temporarily unavailable. Please try again later."}), 503
@@ -265,96 +267,62 @@ def settings():
     user_settings = get_user_settings(db, user_id)
     return render_template('settings.html', settings=user_settings)
 
-@app.route('/delete_data', methods=['POST'])
-def delete_data():
-    """
-    Backend for deleting user's data, including setings and conversations
-    """
-    # User login verification
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    # User definition
-    user_id = session['user_id']
-
-    # Data deletion
-    db.conversations.delete_many({'user_id': user_id})
-    db.settings.delete_one({'user_id': user_id})
-    flash('Todos tus datos han sido borrados.', 'success')
-
-    return redirect(url_for('settings'))
-
-@app.route('/delete_account', methods=['POST'])
-def delete_account():
-    """
-    Backend for deleting user's account
-    """
-    # User login verification
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    # User definition
-    user_id = session['user_id']
-
-    # Account deletion
-    db.users.delete_one({"_id": user_id})
-    session.clear()
-
-    return redirect(url_for('welcome'))
-
-@app.route('/delete_data', methods=['POST'])
-@app.route('/delete_data', methods=['POST'])
+@app.route('/delete_user_data', methods=['POST'])
 def delete_user_data():
+    """
+    Dele user data, both personal and conversational
+    """
     try:
-        # Obtener el user_id de la sesión
+        # Get user_id
         user_id = session.get('user_id')
 
         if not user_id:
             flash('Usuario no encontrado en la sesión.', 'error')
-            return redirect(url_for('settings'))  # Redirigir si no hay usuario en sesión
+            return redirect(url_for('settings'))
 
-        # Borrar todas las conversaciones asociadas a este usuario en la colección "conversations"
+        # Delete all convers related to user
         result = db.conversations.delete_many({'user_id': user_id})
 
-        # Verificar cuántos documentos fueron eliminados
+        # Count deleted convers
         if result.deleted_count > 0:
             flash(f'Se han eliminado {result.deleted_count} conversaciones.', 'success')
         else:
             flash('No se encontraron datos para eliminar.', 'info')
 
-        return redirect(url_for('settings'))  # Redirigir a la página de configuraciones
+        return redirect(url_for('settings'))
 
     except Exception as e:
         flash(f'Ocurrió un error: {str(e)}', 'error')
         return redirect(url_for('settings'))
 
-@app.route('/delete_account', methods=['POST'])
+@app.route('/delete_user_account', methods=['POST'])
 def delete_user_account():
+    """
+    Delete user account inclouding conversation's data and user's personal data
+    """
     try:
-        # Obtener el user_id de la sesión
+        # Get user id
         user_id = session['user_id']
 
         if not user_id:
             flash('Usuario no encontrado en la sesión.', 'error')
-            return redirect(url_for('settings'))  # Redirigir si no hay usuario en sesión
+            return redirect(url_for('settings'))
 
-        # Borrar todas las conversaciones asociadas a este usuario en la colección "conversations"
-        conversations_result = db.conversations.delete_many({'user_id': user_id})
+        # Delete all conversations
+        db.conversations.delete_many({'user_id': user_id})
 
-        # Borrar el usuario de la colección "users"
+        # Delete user
         user_result = db.users.delete_one({'_id': user_id})
 
-        # Verificar si se eliminó el usuario
+        # Deletion verification
         if user_result.deleted_count == 1:
             flash('Tu cuenta y todos tus datos han sido eliminados exitosamente.', 'success')
         else:
             flash('No se pudo encontrar o eliminar la cuenta del usuario.', 'error')
             return redirect(url_for('settings'))
 
-        # Limpiar la sesión del usuario (cerrar sesión)
         session.clear()
-
-        return redirect(url_for('index'))  # Redirigir a la página principal
+        return redirect(url_for('index'))
 
     except Exception as e:
         flash(f'Ocurrió un error: {str(e)}', 'error')
@@ -362,37 +330,40 @@ def delete_user_account():
     
 @app.route('/logout', methods=['POST'])
 def logout():
-    # Limpiar la sesión del usuario
+    """
+    Log out from started session
+    """
+    # Clean session
     session.clear()
-
-    # Mensaje de confirmación
     flash('Has cerrado sesión exitosamente.', 'success')
-
-    # Redirigir a la página de bienvenida (inicio de sesión o registro)
     return redirect(url_for('welcome'))
 
+@app.route('/images/<path:filename>')
+def send_image(filename):
+    return send_from_directory('path/to/save', filename)
+
+@app.route('/analytics/wordcloud.png')
+def wordcloud():
+    img = analyzer.plot_wordcloud()  # Generar la gráfica
+    if img:
+        return make_response(img.getvalue(), 200, {'Content-Type': 'image/png'})
+    else:
+        return "No data to generate wordcloud", 404
+
+@app.route('/analytics/barplot.png')
+def barplot():
+    img = analyzer.plot_barplot()  # Generar la gráfica
+    if img:
+        return make_response(img.getvalue(), 200, {'Content-Type': 'image/png'})
+    else:
+        return "No data to generate barplot", 404
+
+# Página de análisis
 @app.route('/analytics')
-def analytics():
-    """
-    Backend for user's data analysis
-    """
-    # User login verification
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+def analytics_page():
+    analyzer.get_history()
+    return render_template('analytics.html', analyzer = analyzer)
 
-    # User definition
-    user_id = session['user_id']
-
-    
-    try:
-        emotion_labels, emotion_data, hobby_labels, hobby_data = procstop.get_user_data(user_id)
-        return render_template('analytics.html', 
-                               emotion_labels=emotion_labels, 
-                               emotion_data=emotion_data,
-                               hobby_labels=hobby_labels, 
-                               hobby_data=hobby_data)
-    except Exception as e:
-        return str(e)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

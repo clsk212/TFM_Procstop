@@ -1,84 +1,20 @@
 {% extends "base.html" %}
 
-{% block additional_styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='analytics.css') }}">
+{% block title %}
+    Analytics - PROCSTOP
 {% endblock %}
 
 {% block content %}
-<section id="analytics">
-    <div class="analytics-container centered-container">
-        <h2>Analytics</h2>
-        <!-- Espacio para gráfico de la serie temporal de emociones -->
-        <canvas id="emotionsChart"></canvas>
-        <!-- Espacio para gráfico de hobbies -->
-        <canvas id="hobbiesChart"></canvas>
-        <!-- Espacio para gráfico de frecuencia de hobbies -->
-        <canvas id="hobbiesFrequencyChart"></canvas>
-    </div>
-</section>
-{% endblock %}
-
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Gráfico de la serie temporal de emociones
-    var emotionsCtx = document.getElementById('emotionsChart').getContext('2d');
-    var emotionsChart = new Chart(emotionsCtx, {
-        type: 'line',
-        data: {
-            labels: [],  // Deberán ser fechas
-            datasets: [{
-                label: 'Emociones',
-                data: [],  // Datos de emociones
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    // Gráfico de hobbies
-    var hobbiesCtx = document.getElementById('hobbiesChart').getContext('2d');
-    var hobbiesChart = new Chart(hobbiesCtx, {
-        type: 'pie',
-        data: {
-            labels: [],  // Hobbies
-            datasets: [{
-                data: [],  // Frecuencia de cada hobbie
-                backgroundColor: [],
-                borderColor: [],
-                borderWidth: 1
-            }]
-        }
-    });
-
-    // Gráfico de frecuencia de hobbies
-    var hobbiesFreqCtx = document.getElementById('hobbiesFrequencyChart').getContext('2d');
-    var hobbiesFreqChart = new Chart(hobbiesFreqCtx, {
-        type: 'bar',
-        data: {
-            labels: [],  // Hobbies
-            datasets: [{
-                label: 'Frecuencia',
-                data: [],  // Frecuencia de cada hobbie
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-</script>
+    <section class="analytics-section">
+        <div class="image-container">
+            <div class="image-block">
+                <h2>WordCloud</h2>
+                <img src="{{ url_for('wordcloud') }}" alt="WordCloud for {{ username }}">
+            </div>
+            <div class="image-block">
+                <h2>Top 10 Entities Bar Plot</h2>
+                <img src="{{ url_for('barplot') }}" alt="Top 10 Entities for {{ username }}">
+            </div>
+        </div>
+    </section>
 {% endblock %}

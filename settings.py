@@ -1,6 +1,9 @@
 from bson import ObjectId
 
 def get_user_settings(db, user_id):
+    """
+    Import user settings from Mongo
+    """
     user = db.users.find_one({'_id': ObjectId(user_id)})
     
     if user is None:
@@ -17,10 +20,11 @@ def get_user_settings(db, user_id):
     }
 
 def update_user_settings(db, user_id, form_data):
+    """
+    Update user configuration to MongoDB
+    """
     name = form_data.get('name')
     language = form_data.get('language')
-
-    # Actualizar solo el nombre y el idioma del usuario
     db.users.update_one(
         {'_id': user_id},
         {

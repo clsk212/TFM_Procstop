@@ -581,3 +581,32 @@ input[type="submit"]:hover {
     padding: 10px;
     border-radius: 2px;
 }
+
+
+
+/* Estilo para centrar las imágenes una al lado de la otra */
+.image-container {
+    display: flex;
+    justify-content: space-around; /* Alinea las imágenes con espacio alrededor */
+    flex-wrap: wrap; /* Para que se adapten a pantallas pequeñas */
+    margin-top: 20px;
+}
+
+.image-block {
+    text-align: center; /* Centra los títulos sobre las imágenes */
+    margin: 10px;
+}
+
+.image-block img {
+    max-width: 100%; /* Asegura que las imágenes se ajusten a su contenedor */
+    height: auto; /* Mantiene la proporción de la imagen */
+    width: 600px; /* Ajusta el ancho de la imagen a tu preferencia */
+}
+
+h1 {
+    text-align: center; /* Centra el título principal */
+}
+
+.analytics-title {
+    color: black;
+}

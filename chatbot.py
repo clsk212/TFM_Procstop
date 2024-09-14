@@ -24,6 +24,7 @@ class Chatbot:
         self.client = OpenAI(api_key = api_key)
         self.model = model
         self.user_id = None
+        self.username = None
         self.db = db
         self.language = language
         self.start_time = datetime.now()
@@ -41,7 +42,6 @@ class Chatbot:
         Initialize conversation register on mongo
         """
         conversation = {
-            "conversation_id": self.conversation_id,
             "user_id": self.user_id,
             "messages": [],
             "entities": {"people": [], "places": [], "orgs": [], "others": []},
@@ -50,30 +50,31 @@ class Chatbot:
             "duration": 0,
             "last_update": None
         }
-        self.db.conversations.insert_one(conversation)
-
-    # def get_user_data(self,user_id):
-    #     #### BORRAR? Se usa para analytics?
-    #     user_data = self.db.users.find_one({"user_id": user_id})
         
-    #     emotions = [(emotion[0], emotion[1], emotion[2].strftime('%Y-%m-%d')) for emotion in user_data['emotions']]
-    #     emotion_labels = [e[2] for e in emotions]
-    #     emotion_data = [e[1] for e in emotions]
-
-    #     hobbies = [(hobbie[0], hobbie[1]) for hobbie in user_data['hobbies']]
-    #     hobby_labels = [h[0] for h in hobbies]
-    #     hobby_data = [h[1] for h in hobbies]
-
-    #     return emotion_labels, emotion_data, hobby_labels, hobby_data
+        # Insert the conversation document and retrieve the inserted ID
+        result = self.db.conversations.insert_one(conversation)
+        # Store the conversation ID
+        self.conversation_id = result.inserted_id
 
     def is_ready_for_recommendation(self):
         """
         Check if there exist enough entities and emotions detected in the chat to recommend activities
         """
-        enough_emotion_info = len(self.context['emotions']) >= 3
-        enough_entity_info = any(len(self.context[entity]) > 0 for entity in ['people', 'places', 'orgs'])
-        
-        return enough_emotion_info and enough_entity_info
+        emotions_list = self.context['emotions']
+
+        # Drop 'neutral' emotion if it exists
+        if 'neutral' in emotions_list:
+            emotions_list = emotions_list[emotions_list != 'neutral']
+
+        # Check if there are at least 3 distinct emotions excluding 'neutral'
+        enough_emotion_info = len(set(emotions_list)) >= 3
+
+        # Check if there are more than 2 entities in any of the 'people', 'places', or 'orgs'
+        enough_entity_info = any(len(self.context[entity]) > 2 for entity in ['people', 'places', 'orgs'])
+
+        # Return True if both conditions are satisfied
+        result = enough_emotion_info and enough_entity_info
+        return result
 
 
     def update_context(self, features_dict):
@@ -132,7 +133,7 @@ class Chatbot:
 
         # Update conversation data to mongo
         update_result = db.conversations.update_one(
-            {"conversation_id": self.conversation_id},
+            {"_id": self.conversation_id},
             {
                 "$push": {
                     "messages": {"user_message": user_input, "bot_message": response},

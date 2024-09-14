@@ -57,11 +57,11 @@
                 <button type="submit" class="btn-action">Cerrar Sesión</button>
             </form>
 
-            <form action="{{ url_for('delete_data') }}" method="post" onsubmit="return confirm('¿Estás seguro de que deseas borrar todos tus datos? Esta acción es irreversible.');">
+            <form action="{{ url_for('delete_user_data') }}" method="post" onsubmit="return confirm('¿Estás seguro de que deseas borrar todos tus datos? Esta acción es irreversible.');">
                 <button type="submit" class="btn-action">Borrar Mis Datos</button>
             </form>
 
-            <form action="{{ url_for('delete_account') }}" method="post" onsubmit="return confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esto no se puede deshacer.');">
+            <form action="{{ url_for('delete_user_account') }}" method="post" onsubmit="return confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esto no se puede deshacer.');">
                 <button type="submit" class="btn-action btn-delete">Eliminar Cuenta</button>
             </form>
         </div>
