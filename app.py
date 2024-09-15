@@ -6,7 +6,7 @@ from datetime import timedelta
 import os
 
 # Third party imports
-from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory, make_response
+from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory, make_response, send_file
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
 from flask import flash
@@ -14,6 +14,11 @@ from bson import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import pymongo
+import openpyxl
+import atexit
+import shutil
+import tempfile
+import os
 
 TF_ENABLE_ONEDNN_OPTS=0
 
@@ -31,17 +36,32 @@ uri = os.getenv("MONGO_URI")
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config["API_KEY"] = os.getenv("API_KEY")
 app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
 # Database configuration
 client = MongoClient(uri,server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True) )
 db = client['procstop']
+# Crear un directorio temporal global para las imágenes
+temp_image_dir = tempfile.mkdtemp()
+print(temp_image_dir)
+
 
 bcrypt = Bcrypt(app)
 
 # Chatbot initialization
 procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", db = db)
-analyzer = DataAnalyzer(db=db, conversation_id=procstop.conversation_id)
+analyzer = DataAnalyzer(db=db, conversation_id=procstop.conversation_id, image_dir='./analytics/')
+
+
+def cleanup_temp_dir():
+    """
+    Delete temporal folder when flask is closed.
+    """
+    shutil.rmtree(temp_image_dir)
+
+# Registrar la función para que se ejecute cuando la app se cierre
+atexit.register(cleanup_temp_dir)
 
 def hash_password(password):
     """
@@ -338,32 +358,88 @@ def logout():
     flash('Has cerrado sesión exitosamente.', 'success')
     return redirect(url_for('welcome'))
 
+@app.route('/temp_images/<filename>')
+def temp_images(filename):
+    return send_from_directory(temp_image_dir, filename)
+
 @app.route('/images/<path:filename>')
 def send_image(filename):
     return send_from_directory('path/to/save', filename)
 
-@app.route('/analytics/wordcloud.png')
-def wordcloud():
-    img = analyzer.plot_wordcloud()  # Generar la gráfica
-    if img:
-        return make_response(img.getvalue(), 200, {'Content-Type': 'image/png'})
+@app.route('/analytics/emotion_pie.png')
+def emotion_pie_chart():
+    filename = analyzer.plot_emotion_pie_chart()
+    if filename:
+        return send_from_directory('analytics', filename)
     else:
-        return "No data to generate wordcloud", 404
+        return "No data to generate emotion pie chart", 404
 
-@app.route('/analytics/barplot.png')
-def barplot():
-    img = analyzer.plot_barplot()  # Generar la gráfica
-    if img:
-        return make_response(img.getvalue(), 200, {'Content-Type': 'image/png'})
+
+@app.route('/analytics/emotion_evolution.png')
+def emotion_evolution():
+    filename = analyzer.plot_emotion_evolution_over_time()
+    if filename:
+        return send_from_directory('analytics', filename)
     else:
-        return "No data to generate barplot", 404
+        return "No data to generate emotion evolution plot", 404
+
+
+@app.route('/analytics/sentiments.png')
+def sentiments_plot():
+    filename = analyzer.plot_sentiments_over_time()
+    if filename:
+        return send_from_directory('analytics', filename)
+    else:
+        return "No data to generate sentiment plot", 404
+
+
+@app.route('/analytics/most_positive_entities.png')
+def most_positive_entities():
+    filename = analyzer.plot_most_positive_entities()
+    if filename:
+        return send_from_directory('analytics', filename)
+    else:
+        return "No data to generate most positive entities plot", 404
+
+
+@app.route('/analytics/least_positive_entities.png')
+def least_positive_entities():
+    filename = analyzer.plot_least_positive_entities()
+    if filename:
+        return send_from_directory('analytics', filename)
+    else:
+        return "No data to generate least positive entities plot", 404
+
+
+@app.route('/analytics/hate_speech_evolution.png')
+def hate_speech_evolution():
+    filename = analyzer.plot_hate_speech_evolution()
+    if filename:
+        return send_from_directory('analytics', filename)
+    else:
+        return "No data to generate hate speech evolution plot", 404
+
+
+@app.route('/analytics/irony_evolution.png')
+def irony_evolution():
+    filename = analyzer.plot_irony_evolution()
+    if filename:
+        return send_from_directory('analytics', filename)
+    else:
+        return "No data to generate irony evolution plot", 404
 
 # Página de análisis
 @app.route('/analytics')
 def analytics_page():
-    analyzer.get_history()
-    return render_template('analytics.html', analyzer = analyzer)
-
+    analyzer.get_history()  # Cargar la historia del usuario antes de renderizar la página
+    analyzer.save_all_dfs_to_excel('./analytics/')
+    return render_template('analytics.html', analyzer=analyzer)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    try:
+        app.run(debug=True)
+    except OSError as e:
+        if e.winerror == 10038:
+            print("Attempted operation on an invalid socket.")
+        else:
+            raise e

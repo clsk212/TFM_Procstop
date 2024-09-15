@@ -1,20 +1,74 @@
 {% extends "base.html" %}
 
-{% block title %}
-    Analytics - PROCSTOP
-{% endblock %}
+{% block title %}Analytics Page{% endblock %}
 
 {% block content %}
-    <section class="analytics-section">
-        <div class="image-container">
-            <div class="image-block">
-                <h2>WordCloud</h2>
-                <img src="{{ url_for('wordcloud') }}" alt="WordCloud for {{ username }}">
-            </div>
-            <div class="image-block">
-                <h2>Top 10 Entities Bar Plot</h2>
-                <img src="{{ url_for('barplot') }}" alt="Top 10 Entities for {{ username }}">
-            </div>
-        </div>
-    </section>
+<div class="analytics-container" style="margin-bottom: 15px; margin-top: 15px;">
+
+    <!-- Pestañas para seleccionar el gráfico -->
+    <div class="analytics-tab">
+        <button class="tablinks" onclick="openTab(event, 'EmotionPie')">Emotion Pie Chart</button>
+        <button class="tablinks" onclick="openTab(event, 'EmotionEvolution')">Emotion Evolution</button>
+        <button class="tablinks" onclick="openTab(event, 'Sentiments')">Sentiments Over Time</button>
+        <button class="tablinks" onclick="openTab(event, 'HateSpeech')">Hate Speech Evolution</button>
+        <button class="tablinks" onclick="openTab(event, 'Irony')">Irony Evolution</button>
+        <button class="tablinks" onclick="openTab(event, 'MostPositive')">Most Positive Entities</button>
+        <button class="tablinks" onclick="openTab(event, 'LeastPositive')">Least Positive Entities</button>
+    </div>
+
+    <!-- Contenido de cada pestaña -->
+    <div id="EmotionPie" class="analytics-tabcontent">
+        <img src="{{ url_for('emotion_pie_chart') }}" alt="Emotion Pie Chart">
+    </div>
+
+    <div id="EmotionEvolution" class="analytics-tabcontent">
+        <img src="{{ url_for('emotion_evolution') }}" alt="Emotion Evolution Plot">
+    </div>
+
+    <div id="Sentiments" class="analytics-tabcontent">
+        <img src="{{ url_for('sentiments_plot') }}" alt="Sentiments Evolution Plot">
+    </div>
+
+    <div id="HateSpeech" class="analytics-tabcontent" style="display: table-caption;">
+        <img src="{{ url_for('hate_speech_evolution') }}" alt="Hate Speech Evolution Plot">
+    </div>
+
+    <div id="Irony" class="analytics-tabcontent" style="display: table-caption;">
+        <img src="{{ url_for('irony_evolution') }}" alt="Irony Evolution Plot">
+    </div>
+
+    <div id="MostPositive" class="analytics-tabcontent" style="display: table-caption;">
+        <img src="{{ url_for('most_positive_entities') }}" alt="Most Positive Entities Barplot">
+    </div>
+
+    <div id="LeastPositive" class="analytics-tabcontent" style="display: table-caption;">
+        <img src="{{ url_for('least_positive_entities') }}" alt="Least Positive Entities Barplot">
+    </div>
+</div>
+
+<script>
+// Función para cambiar entre pestañas
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+
+    // Ocultar todo el contenido de las pestañas
+    tabcontent = document.getElementsByClassName("analytics-tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Quitar la clase "active" de todos los botones
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Mostrar la pestaña actual y añadir la clase "active" al botón que se ha hecho clic
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+// Mostrar la primera pestaña por defecto
+document.getElementsByClassName("tablinks")[0].click();
+</script>
 {% endblock %}

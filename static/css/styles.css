@@ -243,7 +243,7 @@ button {
     padding: 10px 15px;
     border: none;
     background-color: #4CAF50;
-    color: white;
+    color: #770000;
     cursor: pointer;
     border-radius: 5px;
 }
@@ -400,7 +400,7 @@ body {
     font-size: medium;
 }
 
-.container, .login-container, .settings-container, .analytics-container, .chat-container {
+.container, .login-container, .settings-container, .chat-container {
     width: 100%; /* Ocupa todo el ancho del contenedor padre */
     max-width: 1650px; /* Tamaño máximo en ancho del contenedor */
     margin: auto; /* Centra el contenedor horizontalmente */
@@ -409,6 +409,18 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 5px rgb(93, 2, 2);
     max-height: 50vh; /* Tamaño máximo en altura relativo al viewport */
+    overflow-y: auto; /* Habilita el desplazamiento si el contenido sobrepasa el tamaño máximo */
+}
+
+.analytics-container {
+    width: 100%; /* Ocupa todo el ancho del contenedor padre */
+    max-width: 1650px; /* Tamaño máximo en ancho del contenedor */
+    margin: auto; /* Centra el contenedor horizontalmente */
+    padding: 20px; /* Añade espacio interno */
+    background-color: rgb(255, 255, 255);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgb(93, 2, 2);
+    max-height: 60vh; /* Tamaño máximo en altura relativo al viewport */
     overflow-y: auto; /* Habilita el desplazamiento si el contenido sobrepasa el tamaño máximo */
 }
 
@@ -580,6 +592,54 @@ input[type="submit"]:hover {
     background-color: #b6f89c;
     padding: 10px;
     border-radius: 2px;
+}
+
+/* Estilos específicos para la página de Analytics */
+.analytics-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Estilos de las pestañas de Analytics */
+/* Barra de pestañas fija justo debajo de la barra de navegación principal */
+.analytics-tab {
+    position: initial;
+    top: 60px;  /* Ajusta este valor dependiendo de la altura de tu primera barra de navegación */
+    width: 100%;
+    background-color: #ffffff;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.analytics-tab button {
+    float: left;
+    background-color: #ffffff;
+    color: #690000;
+    padding: 14px 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.analytics-tab button:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.analytics-tab button.active {
+    background-color: #666;
+    color: white;
+}
+
+/* Contenido de las pestañas */
+.analytics-tabcontent {
+    text-align: center; /* Centra el gráfico horizontalmente */
+}
+
+.analytics-tabcontent img {
+    max-width: 80%; /* Ajustar el ancho del gráfico */
+    height: auto;
 }
 
 
