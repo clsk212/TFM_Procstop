@@ -11,6 +11,7 @@ import shutil
 import os
 import numpy as np
 import matplotlib.colors as mcolors
+import time 
 
 matplotlib.use('Agg')
 
@@ -143,15 +144,15 @@ class DataAnalyzer():
 
     def plot_sentiments_over_time(self):
         """
-        Genera un gráfico de líneas que muestra la evolución de los sentimientos (Positive, Negative, Neutral) a lo largo del tiempo.
+        Genera un gráfico de barras que muestra la evolución de los sentimientos (Positive, Negative, Neutral) a lo largo del tiempo.
         """
         if self.sentiment_df.empty:
             print("No sentiment data to plot.")
             return None
 
         # Definir la ruta del archivo temporal
-        filename = 'sentiment_plot.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_irony = f'irony_evolution_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_irony)
 
         # Asegurarse de que la columna 'timestamp' es de tipo datetime
         self.sentiment_df['timestamp'] = pd.to_datetime(self.sentiment_df['timestamp'], errors='coerce')
@@ -159,27 +160,44 @@ class DataAnalyzer():
         # Eliminar filas con 'timestamp' NaT
         self.sentiment_df.dropna(subset=['timestamp'], inplace=True)
 
+        # Convertir las columnas a numéricas si no lo son
+        self.sentiment_df['Positive'] = pd.to_numeric(self.sentiment_df['Positive'], errors='coerce')
+        self.sentiment_df['Negative'] = pd.to_numeric(self.sentiment_df['Negative'], errors='coerce')
+        self.sentiment_df['Neutral'] = pd.to_numeric(self.sentiment_df['Neutral'], errors='coerce')
+
         # Verificar si después de la conversión hay suficientes datos
         if self.sentiment_df.empty:
             print("No valid sentiment data after cleaning.")
             return None
 
+        # Agrupar el DataFrame por fecha y calcular la media de los sentimientos
+        sentiment_by_date = self.sentiment_df.groupby(self.sentiment_df['timestamp'].dt.date).mean(numeric_only=True)
+
+        # Verificar si hay datos suficientes para graficar
+        if sentiment_by_date.empty:
+            print("No data available for plotting.")
+            return None
+
         # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
 
-        # Graficar las probabilidades de los sentimientos: Positive, Negative, Neutral
-        ax.plot(self.sentiment_df['timestamp'], self.sentiment_df['Positive'], label='Positive', color='green')
-        ax.plot(self.sentiment_df['timestamp'], self.sentiment_df['Negative'], label='Negative', color='red')
-        ax.plot(self.sentiment_df['timestamp'], self.sentiment_df['Neutral'], label='Neutral', color='gray')
+        # Definir el ancho de las barras
+        bar_width = 0.25
+
+        # Definir las posiciones para las fechas
+        positions = np.arange(len(sentiment_by_date.index))
+
+        # Crear las barras para cada sentimiento
+        ax.bar(positions - bar_width, sentiment_by_date['Positive'], width=bar_width, label='Positive', color='green')
+        ax.bar(positions, sentiment_by_date['Negative'], width=bar_width, label='Negative', color='orange')
+        ax.bar(positions + bar_width, sentiment_by_date['Neutral'], width=bar_width, label='Neutral', color='purple')
 
         # Etiquetas y leyenda
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Probability')
-        ax.set_title('Evolution of Sentiments Over Time')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Average Probability')
+        ax.set_xticks(positions)
+        ax.set_xticklabels(sentiment_by_date.index, rotation=45)
         ax.legend(loc='upper right')
-
-        # Rotar las etiquetas del eje x para una mejor legibilidad
-        plt.xticks(rotation=45)
 
         # Guardar la figura en un archivo
         fig.savefig(temp_file_path, format='png')
@@ -188,20 +206,23 @@ class DataAnalyzer():
         plt.close(fig)
 
         # Devolver el nombre del archivo
-        return filename
+        return filename_irony
+
+
+
 
 
     def plot_emotion_pie_chart(self):
         """
-        Genera un gráfico circular que muestra las emociones del usuario por categoría.
+        Genera un gráfico circular que muestra las emociones del usuario por categoría y añade una leyenda.
         """
         if self.emotion_df.empty:
             print("No emotion data to plot.")
             return None
 
         # Definir la ruta del archivo temporal
-        filename = 'emotion_pie.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_pie = f'emotion_pie_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_pie)
 
         # Limpiar el DataFrame antes de usarlo
         self.emotion_df = clean_emotions(self.emotion_df)
@@ -220,14 +241,23 @@ class DataAnalyzer():
             return None
 
         # Crear una nueva figura explícitamente
-        fig, ax = plt.subplots(figsize=(10,6))
+        fig, ax = plt.subplots(figsize=(10, 6))
 
         # Generar el gráfico circular
-        ax.pie(
+        wedges, texts, autotexts = ax.pie(
             emotion_totals,
             labels=emotion_totals.index,
             autopct='%1.1f%%',
             colors=plt.cm.Paired.colors
+        )
+
+        # Añadir una leyenda
+        ax.legend(
+            wedges,  # Los segmentos del gráfico
+            emotion_totals.index,  # Las etiquetas de las emociones
+            title="Emociones",  # Título de la leyenda
+            loc="center left",  # Posición de la leyenda
+            bbox_to_anchor=(1, 0, 0.5, 1)  # Ajustar la posición de la leyenda
         )
 
         # Guardar la figura
@@ -237,7 +267,7 @@ class DataAnalyzer():
         plt.close(fig)
 
         # Devolver el nombre del archivo
-        return filename
+        return filename_pie
 
 
 
@@ -271,8 +301,8 @@ class DataAnalyzer():
             return None
 
         # Definir la ruta del archivo
-        filename = 'emotion_time.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_emotion = f'emotion_time_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_emotion)
 
         # Crear una nueva figura y eje explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -285,7 +315,6 @@ class DataAnalyzer():
         # Etiquetas y título
         ax.set_xlabel('Date')
         ax.set_ylabel('Average Probability')
-        ax.set_title('Evolution of Emotions Over Time')
 
         # Agregar leyenda
         ax.legend(loc='upper right')
@@ -297,7 +326,7 @@ class DataAnalyzer():
         plt.close(fig)
 
         # Devolver el nombre del archivo
-        return filename
+        return filename_emotion
 
 
 
@@ -318,8 +347,8 @@ class DataAnalyzer():
             return None
 
         # Definir la ruta del archivo temporal
-        filename = 'most_positive_entities.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_most_pos = f'most_positive_entities_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_most_pos)
         
         # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -328,7 +357,6 @@ class DataAnalyzer():
         ax.barh(most_positive_entities['entity'], most_positive_entities['sentiment_pos'], color='green')
         ax.set_xlabel('Positivity Score')
         ax.set_ylabel('Entity')
-        ax.set_title('Top 10 Most Positive Entities')
 
         # Guardar la figura en un archivo
         fig.savefig(temp_file_path, format='png')
@@ -337,7 +365,7 @@ class DataAnalyzer():
         plt.close(fig)
 
         # Devolver el nombre del archivo
-        return filename
+        return filename_most_pos
 
     def plot_least_positive_entities(self):
         """
@@ -356,8 +384,8 @@ class DataAnalyzer():
             return None
 
         # Definir la ruta del archivo temporal
-        filename = 'least_positive_entities.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_least_pos = f'least_positive_entities_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_least_pos)
         
         # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -366,7 +394,6 @@ class DataAnalyzer():
         ax.barh(least_positive_entities['entity'], least_positive_entities['sentiment_pos'], color='red')
         ax.set_xlabel('Positivity Score')
         ax.set_ylabel('Entity')
-        ax.set_title('Top 10 Least Positive Entities')
 
         # Invertir el eje Y para que la entidad con menor positividad esté arriba
         ax.invert_yaxis()
@@ -378,7 +405,7 @@ class DataAnalyzer():
         plt.close(fig)
 
         # Devolver el nombre del archivo
-        return filename
+        return filename_least_pos
 
 
     def plot_hate_speech_evolution(self):
@@ -400,8 +427,8 @@ class DataAnalyzer():
         }).reset_index()
 
         # Definir la ruta del archivo temporal
-        filename = 'hate_evolution.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_hate = f'hate_evolution_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_hate)
         # Verificar si hay alguna variabilidad en los datos
         print(grouped_df[['hateful', 'targeted', 'aggressive']].describe())
 
@@ -417,7 +444,6 @@ class DataAnalyzer():
         # Etiquetas de los ejes y título
         plt.xlabel('Time')
         plt.ylabel('Probability')
-        plt.title(f"Hate Speech Evolution Over Time for User {self.user_id}")
 
         # Añadir rotación de las etiquetas del eje X
         plt.xticks(rotation=45, ha='right')
@@ -434,7 +460,7 @@ class DataAnalyzer():
         plt.close()
 
         img.seek(0)
-        return filename
+        return filename_hate
 
 
     def plot_irony_evolution(self):
@@ -487,8 +513,8 @@ class DataAnalyzer():
         ax.legend(loc='upper right')
 
         # Definir la ruta del archivo
-        filename = 'irony_evolution.png'
-        temp_file_path = os.path.join(self.image_dir, filename)
+        filename_irony = f'irony_evolution_{int(time.time())}.png'
+        temp_file_path = os.path.join(self.image_dir, filename_irony)
 
         # Guardar la figura en un archivo
         try:
@@ -500,7 +526,7 @@ class DataAnalyzer():
         plt.close(fig)
 
         # Devolver el nombre del archivo
-        return filename
+        return filename_irony
 
 
     
