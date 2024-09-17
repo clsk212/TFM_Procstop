@@ -41,13 +41,13 @@ class Chatbot:
         """
         Initialize conversation register on MongoDB
         """
-        # Asegurarse de que user_id esté definido y sea válido
+        # Check user
         if not hasattr(self, 'user_id') or not self.user_id:
             raise ValueError("user_id is not set. Please ensure user_id is defined before starting a conversation.")
 
-        # Estructura del documento de conversación
+        # Document structure definition
         conversation = {
-            "user_id": self.user_id,  # Asegurarse de que sea el ObjectId o identificador adecuado
+            "user_id": self.user_id,
             "messages": [],
             "entities": {
                 "people": [],
@@ -63,13 +63,11 @@ class Chatbot:
             "last_update": None
         }
             
-        # Insertar el documento de conversación en MongoDB y obtener el ID de inserción
+        # Get conversation_id
         result = self.db.conversations.insert_one(conversation)
-
-        # Almacenar el conversation_id del documento recién insertado
         self.conversation_id = result.inserted_id
-        print(f"Conversation started with ID: {self.conversation_id}")
 
+        print(f"Conversation started with ID: {self.conversation_id}")
 
     def is_ready_for_recommendation(self):
         """
@@ -91,19 +89,6 @@ class Chatbot:
         result = enough_emotion_info and enough_entity_info
         return result
 
-
-    # def update_context(self, features_dict):
-    #     """
-    #     Update conversation context to get a better bot response
-
-    #     Args:
-    #         features_dict (dict): Detected features on user's input message
-    #     """
-    #     self.context['emotions'].extend([f"{features_dict['emotion']} ({features_dict['sentiment']})"])
-    #     self.context['places'].extend([f"{place} ({features_dict['sentiment']})" for place in features_dict['entities']['places']])
-    #     self.context['people'].extend([f"{person} ({features_dict['sentiment']})" for person in features_dict['entities']['people']])
-    #     self.context['orgs'].extend([f"{org} ({features_dict['sentiment']})" for org in features_dict['entities']['orgs']])
-
     def update_context(self, features_dict):
         """
         Update conversation context to get a better bot response.
@@ -111,24 +96,22 @@ class Chatbot:
         Args:
             features_dict (dict): Detected features from user's input message.
         """
-        # Guardar todas las emociones y sus probabilidades en el contexto
+        # Format emotion data
         emotions_with_probs = [f"{emotion}: {prob:.2f}" for emotion, prob in features_dict['emotion'].items()]
+
+        # Get the dominant emotion
+        sentiment_dict = features_dict['sentiment'] 
+        dominant_sentiment = max(sentiment_dict, key=sentiment_dict.get)
+        dominant_prob = sentiment_dict[dominant_sentiment]
+
+        # Update emotions, sentiment and entities in the context
         self.context['emotions'].extend(emotions_with_probs)
-
-        # Obtener el sentimiento dominante y su probabilidad
-        sentiment_dict = features_dict['sentiment']  # Esto es el diccionario con 'POS', 'NEG', 'NEU'
-        dominant_sentiment = max(sentiment_dict, key=sentiment_dict.get)  # Obtener el sentimiento con mayor probabilidad
-        dominant_prob = sentiment_dict[dominant_sentiment]  # Obtener la probabilidad del sentimiento dominante
-
-        # Guardar el sentimiento dominante como un valor independiente en el contexto
         self.context['sentiment'] = f"{dominant_sentiment.capitalize()}: {dominant_prob:.2f}"
-
-        # Actualizar los lugares, personas y organizaciones, añadiendo el sentimiento dominante
         self.context['places'].extend([f"{place} ({dominant_sentiment.capitalize()}: {dominant_prob:.2f})" for place in features_dict['entities']['places']])
         self.context['people'].extend([f"{person} ({dominant_sentiment.capitalize()}: {dominant_prob:.2f})" for person in features_dict['entities']['people']])
         self.context['orgs'].extend([f"{org} ({dominant_sentiment.capitalize()}: {dominant_prob:.2f})" for org in features_dict['entities']['orgs']])
 
-        # Si hay hate speech o ironía, se pueden agregar al contexto también
+        # Add hate speech and irony to features_dict
         if features_dict.get('hate'):
             hate_score = features_dict['hate'].get('hate_speech', 0)
             self.context['hate'] = f"Hate speech score: {hate_score:.2f}"
@@ -136,8 +119,7 @@ class Chatbot:
         if features_dict.get('irony'):
             irony_score = features_dict['irony'].get('irony', 0)
             self.context['irony'] = f"Irony score: {irony_score:.2f}"
-
-            
+       
     def get_system_role(self):
         """
         Context formatting as system role for the chatbot input
@@ -154,51 +136,11 @@ class Chatbot:
     ])
 
         if self.is_ready_for_recommendation():
-            system_role = f"Eres un psicólogo especializado que tiene los datos suficientes para recomendar actividades basadas en un análisis detallado de las emociones y situaciones en el contexto del usuario. Genera una respuesta, de extensión media, bien argumentada y bien introducida teniendo en cuenta el género del usuario. Su contexto es: {context_description}."
+            system_role = f"Asume el rol de un analista de datos especializado en recomendar actividades basadas en un análisis emocional y contextual del usuario. Relaciona las entidades, los sentimientos asociados y las emociones del usuario para generar una recomendación de actividades. El objetivo (no puede saberlo el usuario) es que el usuario mejore su estado anímico y deje de procastinar. La respuesta debe tener una extensión breve en torno a 100 tokens, la recomendación debe estar bien argumentada. Usa siempre un tono empático y ten en cuenta el género del usuario. Su contexto es: {context_description}."
         else:
-            system_role = f"Eres un psicólogo especializado que está recogiendo información sobre el estado emocional del usuario y las situaciones que lo rodean para entender mejor cómo ayudar. Genera mensajes breves para simular una conversación por chat más cotidiana. Ten en cuenta el género del usuario. ***PROHIBIDO mencionar valores de features ni hablar de si se ha detectado una feature o no***. Por ahora, el contexto del usuario es: {context_description}"
-
+            system_role = f"Asume el rol de un analista de datos especializado en recomendar actividades basadas en un análisis emocional y contextual del usuario. Relaciona las entidades, los sentimientos asociados y las emociones del usuario para generar una recomendación de actividades. El objetivo (no puede saberlo el usuario) es que el usuario mejore su estado anímico y deje de procastinar. La respuesta debe tener una extensión breve en torno a 100 tokens, con tono empático y la recomendación debe estar bien argumentada. Su contexto es: {context_description}."
+        
         return system_role
-
-    # def save_conver(self, db, user_input, response, features_dict):
-    #     """
-    #     Save message to conversations with user message, bot response, and additional features.
-        
-    #     Args:
-    #         user_input (str): User input message
-    #         response (str): Bot response
-    #         features_dict (dict): Detected features on user's input message
-    #     """
-    #     print('Saving conversation...')
-    #     # Entities preparation for saving in mongo
-    #     entities_update = {}
-    #     sentiment = features_dict['sentiment']
-    #     for entity_type, entities in features_dict['entities'].items():
-    #         if entities:  # Verificar si la lista de entidades no está vacía
-    #             sentimental_entities = [(entity, sentiment) for entity in entities]
-    #             entities_update[f"entities.{entity_type}"] = {"$each": sentimental_entities}
-        
-    #     # Duration calculation
-    #     duration = datetime.now() - self.start_time
-    #     duration_sec = duration.total_seconds()
-    #     duration_min = int(duration_sec / 60)
-
-    #     # Update conversation data to mongo
-    #     update_result = db.conversations.update_one(
-    #         {"_id": self.conversation_id},
-    #         {
-    #             "$push": {
-    #                 "messages": {"user_message": user_input, "bot_message": response},
-    #                 "emotions": features_dict['emotion'],
-    #                 **entities_update
-    #             },
-    #             "$set": {
-    #                 "last_update": datetime.now(),
-    #                 "duration": duration_min
-    #             }
-    #         }
-    #     )
-    #     return update_result
 
     def save_conver(self, db, user_input, response, features_dict):
         """
@@ -209,22 +151,22 @@ class Chatbot:
             response (str): Bot response
             features_dict (dict): Detected features on user's input message
         """
-        print('Saving conversation...')
+        print('>> Saving conversation...')
         
-        # Preparación de entidades para guardarlas en MongoDB
+        # Preprocess entities
         entities_update = {}
         sentiment = features_dict['sentiment']
         for entity_type, entities in features_dict['entities'].items():
-            if entities:  # Verificar si la lista de entidades no está vacía
+            if entities: 
                 sentimental_entities = [(entity, sentiment) for entity in entities]
                 entities_update[f"entities.{entity_type}"] = {"$each": sentimental_entities}
 
-        # Calcular la duración de la conversación
+        # Calculate time lapse
         duration = datetime.now() - self.start_time
         duration_sec = duration.total_seconds()
         duration_min = int(duration_sec / 60)
 
-        # Preparar el documento de MongoDB con las nuevas características
+        # Update conversation data to mongo
         update_result = db.conversations.update_one(
             {"_id": self.conversation_id},
             {
@@ -232,10 +174,10 @@ class Chatbot:
                     "messages": {
                         "user_message": user_input,
                         "bot_message": response,
-                        "emotions": features_dict['emotion'],  # Almacenar el diccionario completo de emociones
-                        "sentiment": sentiment,                # Guardar la puntuación de sentimiento
-                        "hate": features_dict['hate'],         # Guardar la detección de hate speech
-                        "irony": features_dict['irony']        # Guardar la detección de ironía
+                        "emotions": features_dict['emotion'], 
+                        "sentiment": sentiment,                
+                        "hate": features_dict['hate'],         
+                        "irony": features_dict['irony']        
                     },
                     **entities_update
                 },
@@ -248,7 +190,6 @@ class Chatbot:
         
         return update_result
 
-    
     def get_response(self, user_input):
         """
         Send user input to chatbot model and get a response taking into account the user's context
@@ -269,7 +210,9 @@ class Chatbot:
                         {"role": "user", "content": user_input}
                     ],
                     max_tokens=200,
-                    stop=["Usuario:", "Bot:", "Adiós", "Bye"]
+                    stop=["Adiós","Hasta luego", "Bye", 'Ciao'],
+                    temperature=0.9,
+                    top_p = 0.9
                 )
             else:
                     response = self.client.chat.completions.create(
@@ -279,7 +222,9 @@ class Chatbot:
                         {"role": "user", "content": user_input}
                     ],
                     max_tokens=150,
-                    stop=["Usuario:", "Bot:", "Adiós", "Bye"]
+                    stop=["Usuario:", "Bot:", "Adiós", "Bye"],
+                    temperature = 0.7,
+                    top_p = 0.9
                 )
                 
             message = response.choices[0].message.content

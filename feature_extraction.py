@@ -14,7 +14,7 @@ class FeatureExtractor:
 
         self.entity_extractor = pipeline("token-classification", model="PlanTL-GOB-ES/roberta-base-bne-capitel-ner-plus")
         self.emotion_extractor = create_analyzer(task="emotion", lang="es") #pipeline("text-classification", model="finiteautomata/beto-emotion-analysis")
-        self.sentiment_extractor = create_analyzer(task="sentiment", lang="es") #pipeline("text-classification", model="finiteautomata/beto-sentiment-analysis")
+        self.sentiment_extractor = create_analyzer(task="sentiment", lang="es")
         self.hate_extractor = create_analyzer(task="hate_speech", lang="es")
         self.irony_extractor = create_analyzer(task="irony", lang="es")
 
@@ -29,7 +29,6 @@ class FeatureExtractor:
             'others': []
         }
         
-    
     def get_entities(self):
         """
         Extract entities from the text and format it as a dictionary
@@ -39,16 +38,13 @@ class FeatureExtractor:
         return self.entities
 
     def clean_entities(self, raw_entities):
-        # Master dictionary to format entities
+        current_entity = []
         master_entities = {
             'PER': 'people',
             'LOC': 'places',
             'ORG': 'orgs',
             'OTH': 'others'
         }
-
-        # Initialize list to join multiple entities
-        current_entity = []
 
         # Iteration over raw entities to extract them
         new_word = True
@@ -86,58 +82,36 @@ class FeatureExtractor:
 
         # Almacenar las probabilidades de cada emoción en el atributo self.emotions
         self.emotions = result.probas
-        print(self.emotions)
         return result.output
 
-        # Opcional: obtener la emoción dominante (la de mayor probabilidad)
-        # dominant_emotion = max(self.emotions, key=self.emotions.get)
-
-        # # Guardar la emoción dominante en un atributo (si es necesario)
-        # self.dominant_emotion = dominant_emotion
-
-        # return self.dominant_emotion  # Puedes devolver la emoción dominante si lo necesitas
-
-        
-        # emotions = self.emotion_extractor(self.text)
-        # if  emotions[0]['label']== 'others':
-        #     self.emotion = 'neutral'
-        # else:
-        #     self.emotion = emotions[0]['label']
-        # return self.emotion
-    
     def get_sentiment(self):
         """
         Extract sentiment from the user's input message and return the dominant sentiment.
         """
-        # Extraer el sentimiento usando el extractor de sentimientos
+        # Extract sentiment from text
         sentiments = self.sentiment_extractor.predict(self.text)
-
-        # Guardar el diccionario de probabilidades (con 'NEG', 'NEU', 'POS') en self.sentiment
         self.sentiment = sentiments.probas
 
-        # Encontrar el sentimiento mayoritario y su probabilidad
+        # Get dominant sentiment
         dominant_sentiment = max(self.sentiment, key=self.sentiment.get)
         dominant_prob = self.sentiment[dominant_sentiment]
-        print(self.sentiment)
-        # Retornar una lista con el sentimiento mayoritario y su probabilidad
         return [dominant_sentiment, dominant_prob]
-
 
     def get_hate_speech(self):
         """
         Detect hate speech in user's input message
         """
+        # Extract hate speech from text
         hate = self.hate_extractor.predict(self.text)
         self.hate = hate.probas
-        print(self.hate)
 
     def get_irony(self):
         """
         Detect irony in user's input message
-        """
+        """ 
+        # Extract irony from text
         irony = self.irony_extractor.predict(self.text)
         self.irony = irony.probas
-        print(self.irony)
 
 def feature_extraction(user_input):
     """

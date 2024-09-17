@@ -41,14 +41,12 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
 # Database configuration
+bcrypt = Bcrypt(app)
 client = MongoClient(uri,server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True) )
 db = client['procstop']
-# Crear un directorio temporal global para las imágenes
+
+# Temporal directory
 temp_image_dir = tempfile.mkdtemp()
-print(temp_image_dir)
-
-
-bcrypt = Bcrypt(app)
 
 # Chatbot initialization
 procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", db = db)
@@ -59,9 +57,9 @@ def cleanup_temp_dir():
     """
     Delete temporal folder when flask is closed.
     """
-    shutil.rmtree(temp_image_dir)
-
-# Registrar la función para que se ejecute cuando la app se cierre
+    shutil.rmtree('./analytics/')
+ 
+# Set cleanup_temp_dir when logging out
 atexit.register(cleanup_temp_dir)
 
 def hash_password(password):
@@ -107,7 +105,7 @@ def login():
             analyzer.user_id = procstop.user_id
             procstop.username = username
             analyzer.username = username
-            print(f'Username {username}\nUser_ID: {procstop.user_id}')
+            print(f' -----> Username {username}\nUser_ID: {procstop.user_id}')
             procstop.gender = str(user['gender'])
             session.pop('login_attempts', None)
             procstop.start_conver()
@@ -359,6 +357,7 @@ def logout():
     flash('Has cerrado sesión exitosamente.', 'success')
     return redirect(url_for('welcome'))
 
+### Plot functions
 @app.route('/temp_images/<filename>')
 def temp_images(filename):
     return send_from_directory(temp_image_dir, filename)
@@ -375,7 +374,6 @@ def emotion_pie_chart():
     else:
         return "No data to generate emotion pie chart", 404
 
-
 @app.route('/analytics/emotion_evolution.png')
 def emotion_evolution():
     filename = analyzer.plot_emotion_evolution_over_time()
@@ -383,7 +381,6 @@ def emotion_evolution():
         return send_from_directory('analytics', filename)
     else:
         return "No data to generate emotion evolution plot", 404
-
 
 @app.route('/analytics/sentiments.png')
 def sentiments_plot():
@@ -393,7 +390,6 @@ def sentiments_plot():
     else:
         return "No data to generate sentiment plot", 404
 
-
 @app.route('/analytics/most_positive_entities.png')
 def most_positive_entities():
     filename = analyzer.plot_most_positive_entities()
@@ -401,7 +397,6 @@ def most_positive_entities():
         return send_from_directory('analytics', filename)
     else:
         return "No data to generate most positive entities plot", 404
-
 
 @app.route('/analytics/least_positive_entities.png')
 def least_positive_entities():
@@ -411,7 +406,6 @@ def least_positive_entities():
     else:
         return "No data to generate least positive entities plot", 404
 
-
 @app.route('/analytics/hate_speech_evolution.png')
 def hate_speech_evolution():
     filename = analyzer.plot_hate_speech_evolution()
@@ -419,7 +413,6 @@ def hate_speech_evolution():
         return send_from_directory('analytics', filename)
     else:
         return "No data to generate hate speech evolution plot", 404
-
 
 @app.route('/analytics/irony_evolution.png')
 def irony_evolution():
@@ -429,11 +422,10 @@ def irony_evolution():
     else:
         return "No data to generate irony evolution plot", 404
 
-# Página de análisis
 @app.route('/analytics')
 def analytics_page():
     analyzer.get_history()  # Cargar la historia del usuario antes de renderizar la página
-    analyzer.save_all_dfs_to_excel('./analytics/')
+    # analyzer.save_all_dfs_to_excel('./analytics/')
     return render_template('analytics.html', analyzer=analyzer)
 
 if __name__ == '__main__':

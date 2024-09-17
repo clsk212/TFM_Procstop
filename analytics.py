@@ -1,4 +1,4 @@
-from wordcloud import WordCloud
+
 import matplotlib.pyplot as plt
 from collections import Counter
 import pandas as pd
@@ -17,30 +17,26 @@ matplotlib.use('Agg')
 
 def clean_emotions(df):
     """
-    Limpia y prepara el DataFrame de emociones para su análisis.
+    Preprocess detected emotions for analytics
+    Args:
+        df (pd.DataFrame): Emotion dataset to clean
     """
-    # Convertir 'probability' a numérico
     df['probability'] = pd.to_numeric(df['probability'], errors='coerce')
-
-    # Eliminar filas con valores nulos en 'emotion' o 'probability'
     df = df.dropna(subset=['emotion', 'probability'])
-
-    # Limpiar y normalizar la columna 'emotion'
     df['emotion'] = df['emotion'].astype(str).str.strip().str.lower()
-
     return df
 
-def limpiar_conversaciones_vacias(analyzer):
+def clean_empty_convers(analyzer):
     """
-    Elimina conversaciones que no tienen registros de emociones, entidades, sentimientos o hate speech.
+    Preprocess convers to delete those empty
+    Args:
+        analyzer (Object)
     """
-    # Revisamos si los DataFrames están vacíos
     if analyzer.emotion_df.empty and analyzer.entity_df.empty and analyzer.sentiment_df.empty and analyzer.hate_df.empty:
         print("No useful data found in the current conversation. Skipping.")
-        return False  # Si todo está vacío, no seguimos procesando
-
+        return False
     print("Conversations with valid data found.")
-    return True  # Si hay datos relevantes, continuamos el procesamiento
+    return True 
 
 class DataAnalyzer():
     def __init__(self, db, conversation_id, image_dir : str) -> None:
@@ -58,6 +54,9 @@ class DataAnalyzer():
         self.conversation_id = conversation_id
     
     def get_history(self):
+        """
+        Recover user's historical feature_dicts
+        """
         conversations = list(self.db.conversations.find({'user_id': self.user_id}))
         if not conversations:
             print(f"No conversations found for user with ObjectId: {self.user_id}")
@@ -71,7 +70,7 @@ class DataAnalyzer():
         sentiment_list = []
 
         for conversation in conversations:
-            conversation_id = conversation['_id']  # Capture the conversation ID
+            conversation_id = conversation['_id']
             messages = conversation.get('messages', [])
             entities = conversation.get('entities', {})
             for message in messages:
@@ -83,11 +82,11 @@ class DataAnalyzer():
                             'emotion': emotion,
                             'probability': probability,
                             'timestamp': timestamp,
-                            'conversation_id': str(conversation_id)  # Add conversation ID
+                            'conversation_id': str(conversation_id)
                         })
 
                 hate_data = message.get('hate', {})
-                if hate_data:  # Only append if hate data is present
+                if hate_data:
                     hate_list.append({
                         'hateful': hate_data.get('hateful', 0),
                         'targeted': hate_data.get('targeted', 0),
@@ -97,7 +96,7 @@ class DataAnalyzer():
                     })
 
                 irony_data = message.get('irony', {})
-                if irony_data:  # Similarly for irony data
+                if irony_data:
                     irony_list.append({
                         'ironic': irony_data.get('ironic', 0),
                         'not_ironic': irony_data.get('not ironic', 0),
@@ -117,7 +116,7 @@ class DataAnalyzer():
 
             for category, entities_in_category in entities.items():
                 for entity_info in entities_in_category:
-                    if len(entity_info) == 2 and isinstance(entity_info[1], dict):  # Validate structure and type
+                    if len(entity_info) == 2 and isinstance(entity_info[1], dict):
                         entity_name, sentiment_data = entity_info
                         entities_list.append({
                             'category': category,
@@ -137,419 +136,327 @@ class DataAnalyzer():
         # Assume entities are extracted elsewhere and appended similarly
 
         print(f"DataFrames created with entries: Emotion({len(self.emotion_df)}), Hate({len(self.hate_df)}), Irony({len(self.irony_df)}), Sentiment({len(self.sentiment_df)})")
-        return limpiar_conversaciones_vacias(self)
-
-
-
+        return clean_empty_convers(self)
 
     def plot_sentiments_over_time(self):
         """
-        Genera un gráfico de barras que muestra la evolución de los sentimientos (Positive, Negative, Neutral) a lo largo del tiempo.
-        """
-        if self.sentiment_df.empty:
-            print("No sentiment data to plot.")
-            return None
+        Generate a barplot with historical sentiments
 
-        # Definir la ruta del archivo temporal
+        Returns:
+            filename_irony (str): Output file name
+        """
+
+        # Filepath definition
         filename_irony = f'irony_evolution_{int(time.time())}.png'
         temp_file_path = os.path.join(self.image_dir, filename_irony)
 
-        # Asegurarse de que la columna 'timestamp' es de tipo datetime
-        self.sentiment_df['timestamp'] = pd.to_datetime(self.sentiment_df['timestamp'], errors='coerce')
-
-        # Eliminar filas con 'timestamp' NaT
+        # Delete empty
         self.sentiment_df.dropna(subset=['timestamp'], inplace=True)
-
-        # Convertir las columnas a numéricas si no lo son
+        
+        # Set types
+        self.sentiment_df['timestamp'] = pd.to_datetime(self.sentiment_df['timestamp'], errors='coerce')
         self.sentiment_df['Positive'] = pd.to_numeric(self.sentiment_df['Positive'], errors='coerce')
         self.sentiment_df['Negative'] = pd.to_numeric(self.sentiment_df['Negative'], errors='coerce')
         self.sentiment_df['Neutral'] = pd.to_numeric(self.sentiment_df['Neutral'], errors='coerce')
 
-        # Verificar si después de la conversión hay suficientes datos
-        if self.sentiment_df.empty:
-            print("No valid sentiment data after cleaning.")
-            return None
-
-        # Agrupar el DataFrame por fecha y calcular la media de los sentimientos
+        # Group by date
         sentiment_by_date = self.sentiment_df.groupby(self.sentiment_df['timestamp'].dt.date).mean(numeric_only=True)
 
-        # Verificar si hay datos suficientes para graficar
         if sentiment_by_date.empty:
             print("No data available for plotting.")
             return None
 
-        # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Definir el ancho de las barras
         bar_width = 0.25
-
-        # Definir las posiciones para las fechas
         positions = np.arange(len(sentiment_by_date.index))
-
-        # Crear las barras para cada sentimiento
         ax.bar(positions - bar_width, sentiment_by_date['Positive'], width=bar_width, label='Positive', color='green')
         ax.bar(positions, sentiment_by_date['Negative'], width=bar_width, label='Negative', color='orange')
         ax.bar(positions + bar_width, sentiment_by_date['Neutral'], width=bar_width, label='Neutral', color='purple')
-
-        # Etiquetas y leyenda
         ax.set_xlabel('Date')
         ax.set_ylabel('Average Probability')
         ax.set_xticks(positions)
         ax.set_xticklabels(sentiment_by_date.index, rotation=45)
         ax.legend(loc='upper right')
 
-        # Guardar la figura en un archivo
+        # Save in temporal folder
         fig.savefig(temp_file_path, format='png')
-
-        # Cerrar la figura después de guardarla para liberar memoria
         plt.close(fig)
 
-        # Devolver el nombre del archivo
         return filename_irony
-
-
-
-
 
     def plot_emotion_pie_chart(self):
         """
-        Genera un gráfico circular que muestra las emociones del usuario por categoría y añade una leyenda.
+        Generate pie chart with all emotions
+
+        Returns:
+            filename_pie (str): Output file name
         """
         if self.emotion_df.empty:
             print("No emotion data to plot.")
             return None
 
-        # Definir la ruta del archivo temporal
+        # Path definition
         filename_pie = f'emotion_pie_{int(time.time())}.png'
         temp_file_path = os.path.join(self.image_dir, filename_pie)
 
-        # Limpiar el DataFrame antes de usarlo
+        # Data cleaning
         self.emotion_df = clean_emotions(self.emotion_df)
 
-        # Verificar si el DataFrame sigue teniendo datos después de la limpieza
+        # Check enough data
         if self.emotion_df.empty:
             print("No emotion data to plot after cleaning.")
             return None
 
-        # Sumar las probabilidades de cada emoción para mostrar la distribución
+        # Group by emotion
         emotion_totals = self.emotion_df.groupby('emotion')['probability'].sum()
 
-        # Verificar si 'emotion_totals' no está vacío
+        # Check emptyness
         if emotion_totals.empty:
             print("No emotion totals to plot.")
             return None
 
-        # Crear una nueva figura explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Generar el gráfico circular
         wedges, texts, autotexts = ax.pie(
             emotion_totals,
             labels=emotion_totals.index,
             autopct='%1.1f%%',
             colors=plt.cm.Paired.colors
         )
-
-        # Añadir una leyenda
         ax.legend(
-            wedges,  # Los segmentos del gráfico
-            emotion_totals.index,  # Las etiquetas de las emociones
-            title="Emociones",  # Título de la leyenda
-            loc="center left",  # Posición de la leyenda
-            bbox_to_anchor=(1, 0, 0.5, 1)  # Ajustar la posición de la leyenda
+            wedges,
+            emotion_totals.index,
+            title="Emociones", 
+            loc="center left",
+            bbox_to_anchor=(1, 0, 0.5, 1)
         )
 
-        # Guardar la figura
+        # Save in temporal file
         fig.savefig(temp_file_path, format='png')
-
-        # Cerrar la figura después de guardarla
         plt.close(fig)
 
-        # Devolver el nombre del archivo
         return filename_pie
-
-
 
     def plot_emotion_evolution_over_time(self):
         """
-        Genera un gráfico de líneas que muestra la evolución de las emociones a lo largo del tiempo.
+        Generate line graph with emotion evolution
+
+        Returns:
+            filename_emotion (str): Output file name
         """
+        
         if self.emotion_df.empty:
             print("No emotion data to plot.")
             return None
         
-        # Verificar el tipo de datos en la columna 'timestamp'
-        print(self.emotion_df['timestamp'].dtype)
+        # Path definition
+        filename_emotion = f'emotion_time.png'
+        temp_file_path = os.path.join(self.image_dir, filename_emotion)
 
-        # Convertir a datetime y eliminar valores NaT
+        # Data cleaning
         self.emotion_df['timestamp'] = pd.to_datetime(self.emotion_df['timestamp'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
-        print(self.emotion_df['timestamp'].dtype)
-
-        # Eliminar filas con NaT en 'timestamp'
         self.emotion_df.dropna(subset=['timestamp'], inplace=True)
 
-        # Agrupar los datos por emoción y fecha (diariamente) y calcular la media de 'probability'
+        # Group by emotion and date
         daily_emotions = self.emotion_df.groupby(['emotion', pd.Grouper(key='timestamp', freq='D')])['probability'].mean().unstack(0)
-        
-        # Rellenar valores NaN con 0
         daily_emotions.fillna(0, inplace=True)
 
-        # Verificar que hay datos para graficar
+        # Check enough data
         if daily_emotions.empty:
             print("No data available for plotting.")
             return None
 
-        # Definir la ruta del archivo
-        filename_emotion = f'emotion_time_{int(time.time())}.png'
-        temp_file_path = os.path.join(self.image_dir, filename_emotion)
-
-        # Crear una nueva figura y eje explícitamente
+      
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Graficar cada emoción con etiquetas para la leyenda
         for emotion in daily_emotions.columns:
             if not daily_emotions[emotion].empty:
                 ax.plot(daily_emotions.index, daily_emotions[emotion], label=emotion)
-
-        # Etiquetas y título
         ax.set_xlabel('Date')
         ax.set_ylabel('Average Probability')
-
-        # Agregar leyenda
         ax.legend(loc='upper right')
-
-        # Guardar la figura en un archivo
+        
+        # Save to temporal folder
         fig.savefig(temp_file_path, format='png')
-
-        # Cerrar la figura después de guardarla
         plt.close(fig)
 
-        # Devolver el nombre del archivo
         return filename_emotion
-
-
 
     def plot_most_positive_entities(self):
         """
         Generates a bar plot with the entities that have the most positivity associated with them.
+
+        Returns:
+            filename_most_pos(str): Output file name
         """
         if self.entity_df.empty:
             print("No entity data to plot.")
             return None
 
-        # Ordenar por sentimiento y tomar las 10 entidades más positivas
         most_positive_entities = self.entity_df.sort_values(by='sentiment_pos', ascending=False).head(10)
 
-        # Verificar si hay suficientes datos para graficar
+        # Checkk enough data
         if most_positive_entities.empty:
             print("No data to plot after filtering.")
             return None
 
-        # Definir la ruta del archivo temporal
+        # Path definition
         filename_most_pos = f'most_positive_entities_{int(time.time())}.png'
         temp_file_path = os.path.join(self.image_dir, filename_most_pos)
         
-        # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Generar el gráfico de barras horizontales
         ax.barh(most_positive_entities['entity'], most_positive_entities['sentiment_pos'], color='green')
         ax.set_xlabel('Positivity Score')
         ax.set_ylabel('Entity')
-
-        # Guardar la figura en un archivo
         fig.savefig(temp_file_path, format='png')
-
-        # Cerrar la figura después de guardarla para liberar memoria
         plt.close(fig)
 
-        # Devolver el nombre del archivo
         return filename_most_pos
 
     def plot_least_positive_entities(self):
         """
-        Genera un barplot con las entidades con menos positividad asociada.
+        Generate a barplot with the least positive entities for the user
+
+        Returns:
+            filename_least_pos (str): Output file name
         """
         if self.entity_df.empty:
             print("No entity data to plot.")
             return None
 
-        # Ordenar por sentimiento positivo y tomar las 10 entidades menos positivas
         least_positive_entities = self.entity_df.sort_values(by='sentiment_pos', ascending=True).head(10)
 
-        # Verificar si hay suficientes datos para graficar
+        # Check  enough data
         if least_positive_entities.empty:
             print("No data to plot after filtering.")
             return None
 
-        # Definir la ruta del archivo temporal
+        # Path definition
         filename_least_pos = f'least_positive_entities_{int(time.time())}.png'
         temp_file_path = os.path.join(self.image_dir, filename_least_pos)
         
-        # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Generar el gráfico de barras horizontales
         ax.barh(least_positive_entities['entity'], least_positive_entities['sentiment_pos'], color='red')
         ax.set_xlabel('Positivity Score')
         ax.set_ylabel('Entity')
-
-        # Invertir el eje Y para que la entidad con menor positividad esté arriba
         ax.invert_yaxis()
-
-        # Guardar la figura en un archivo
         fig.savefig(temp_file_path, format='png')
-
-        # Cerrar la figura después de guardarla para liberar memoria
         plt.close(fig)
 
-        # Devolver el nombre del archivo
         return filename_least_pos
-
 
     def plot_hate_speech_evolution(self):
         """
-        Genera un gráfico de líneas que muestra la evolución del hate speech en el tiempo,
-        agrupado por conversation_id, con la media de hateful, targeted y aggressive
-        y tomando el timestamp más reciente para cada conversation_id.
+        Generate a plot with hate speech evolution in time
+
+        Returns:
+            filename_hate (Str): Output filename
         """
         if self.hate_df.empty:
             print("No hate speech data to plot.")
             return None
 
-        # Agrupar por conversation_id, calcular la media y obtener el timestamp más reciente
+        # Group by conversation
         grouped_df = self.hate_df.groupby('conversation_id').agg({
             'hateful': 'mean',
             'targeted': 'mean',
             'aggressive': 'mean',
-            'timestamp': 'max'  # Seleccionamos el timestamp más reciente
+            'timestamp': 'max'
         }).reset_index()
 
-        # Definir la ruta del archivo temporal
+        # Path definition
         filename_hate = f'hate_evolution_{int(time.time())}.png'
         temp_file_path = os.path.join(self.image_dir, filename_hate)
-        # Verificar si hay alguna variabilidad en los datos
-        print(grouped_df[['hateful', 'targeted', 'aggressive']].describe())
 
-        # Crear el gráfico
         img = io.BytesIO()
         plt.figure(figsize=(10, 6))
-
-        # Graficar las tres series: Hate Speech, Targeted Speech y Aggressive Speech
         plt.plot(grouped_df['timestamp'], grouped_df['hateful'], label='Hate Speech', color='blue', marker='o')
         plt.plot(grouped_df['timestamp'], grouped_df['targeted'], label='Targeted Speech', color='green', marker='o')
         plt.plot(grouped_df['timestamp'], grouped_df['aggressive'], label='Aggressive Speech', color='red', marker='o')
-
-        # Etiquetas de los ejes y título
         plt.xlabel('Time')
         plt.ylabel('Probability')
-
-        # Añadir rotación de las etiquetas del eje X
         plt.xticks(rotation=45, ha='right')
-
-        # Añadir leyenda y cuadrícula
         plt.legend(['Hateful', 'Targeted', 'Aggressive'],loc='upper right')
         plt.grid(True)
-
-        # Ajustar el diseño y guardar la imagen
         plt.tight_layout()
-        plt.savefig(temp_file_path, format='png')  # Guardar en la carpeta temporal
-        plt.savefig(img, format='png')
+        plt.savefig(temp_file_path, format='png') 
         plt.clf()
         plt.close()
 
         img.seek(0)
         return filename_hate
 
-
     def plot_irony_evolution(self):
         """
-        Genera un gráfico de barras que muestra la evolución de la ironía en el tiempo.
+        Generate a plot with irony evolution in time
+
+        Returns:
+            filename_irony (str): Filename output
         """
         if self.irony_df.empty:
             print("No irony data to plot.")
             return None
+        
+        # Path definition
+        filename_irony = f'irony_evolution.png'
+        temp_file_path = os.path.join(self.image_dir, filename_irony)
 
-        # Asegurarse de que la columna 'timestamp' es de tipo datetime
+        # Data cleaning
         self.irony_df['timestamp'] = pd.to_datetime(self.irony_df['timestamp'], errors='coerce')
-
-        # Eliminar filas con 'timestamp' NaT
         self.irony_df.dropna(subset=['timestamp'], inplace=True)
 
-        # Verificar si hay suficientes datos después de la limpieza
+        # Check enough data
         if self.irony_df.empty:
             print("No valid irony data after cleaning.")
             return None
 
-        # Agrupar los datos por conversation_id, obteniendo el max timestamp y los valores de ironía
+        # Group by conversation
         grouped_irony_df = self.irony_df.groupby('conversation_id').agg({
             'ironic': 'mean',
             'not_ironic': 'mean',
             'timestamp': 'max'
         }).reset_index()
 
-        # Verificar si el DataFrame agrupado está vacío
+        # Check empty
         if grouped_irony_df.empty:
             print("No data to plot after grouping.")
             return None
 
-        # Crear una nueva figura y ejes explícitamente
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Definir el ancho de las barras
         width = 0.35  
         x = np.arange(len(grouped_irony_df['conversation_id']))
-
-        # Graficar barras
         ax.bar(x - width/2, grouped_irony_df['ironic'], width=width, label='Ironic', color='green')
         ax.bar(x + width/2, grouped_irony_df['not_ironic'], width=width, label='Not Ironic', color='orange')
-
-        # Etiquetas y leyenda
         ax.set_xlabel('Conversation ID')
         ax.set_ylabel('Probability')
         ax.set_xticks(x)
         ax.set_xticklabels(grouped_irony_df['timestamp'].dt.strftime('%Y-%m-%d'), rotation=45, ha='right')
         ax.legend(loc='upper right')
-
-        # Definir la ruta del archivo
-        filename_irony = f'irony_evolution_{int(time.time())}.png'
-        temp_file_path = os.path.join(self.image_dir, filename_irony)
-
-        # Guardar la figura en un archivo
-        try:
-            fig.savefig(temp_file_path, format='png')
-        except Exception as e:
-            print(f"Error saving the figure: {e}")
-
-        # Cerrar la figura para liberar memoria
+        fig.savefig(temp_file_path, format='png')
         plt.close(fig)
 
-        # Devolver el nombre del archivo
         return filename_irony
-
-
     
-    def save_all_dfs_to_excel(self, base_path):
-        """
-        Guarda todos los DataFrames relevantes en archivos Excel.
+    #### TO CHECK EVERYHING IS WORKING -> Also uncomment its use in analyics page (app.py)
 
-        Args:
-        base_path (str): Ruta base donde se guardarán los archivos.
-        """
-        # Usamos un diccionario para mapear nombres de archivos a DataFrames
-        dataframes = {
-            'emotion_data.xlsx': self.emotion_df,
-            'irony_data.xlsx': self.irony_df,
-            'hate_speech_data.xlsx': self.hate_df,
-            'sentiment_data.xlsx': self.sentiment_df,
-            'entity_data.xlsx': self.entity_df
-        }
+    # def save_all_dfs_to_excel(self, base_path):
+    #     """
+    #     Save all dataframes with analysis extracted data
 
-        for filename, df in dataframes.items():
-            file_path = f"{base_path}/{filename}"
-            if not df.empty:
-                df.to_excel(file_path, index=False, engine='openpyxl')
-                print(f"Saved {filename} successfully.")
-            else:
-                print(f"No data to save for {filename}.")
+    #     Args:
+    #     base_path (str): Outputpath where to save dfs
+    #     """
+    #     # Map DataFrames names
+    #     dataframes = {
+    #         'emotion_data.xlsx': self.emotion_df,
+    #         'irony_data.xlsx': self.irony_df,
+    #         'hate_speech_data.xlsx': self.hate_df,
+    #         'sentiment_data.xlsx': self.sentiment_df,
+    #         'entity_data.xlsx': self.entity_df
+    #     }
+
+    #     for filename, df in dataframes.items():
+    #         file_path = f"{base_path}/{filename}"
+    #         if not df.empty:
+    #             df.to_excel(file_path, index=False, engine='openpyxl')
+    #             print(f"Saved {filename} successfully.")
+    #         else:
+    #             print(f"No data to save for {filename}.")
