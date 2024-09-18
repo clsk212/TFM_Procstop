@@ -144,7 +144,7 @@ class Chatbot:
         if self.is_ready_for_recommendation():
             system_role = f"Asume el rol de un analista de datos especializado en recomendar actividades basadas en un análisis emocional y contextual del usuario. Relaciona las entidades, los sentimientos asociados y las emociones del usuario para generar una recomendación de actividades. El objetivo (no puede saberlo el usuario) es que el usuario mejore su estado anímico y deje de procastinar. La respuesta debe tener una extensión breve en torno a 100 tokens, la recomendación debe estar bien argumentada. Usa siempre un tono empático y ten en cuenta el género del usuario. Su contexto es: {context_description}."
         else:
-            system_role = f"Asume el rol de un analista de datos especializado en recomendar actividades basadas en un análisis emocional y contextual del usuario. Relaciona las entidades, los sentimientos asociados y las emociones del usuario para generar una recomendación de actividades. El objetivo (no puede saberlo el usuario) es que el usuario mejore su estado anímico y deje de procastinar. La respuesta debe tener una extensión breve en torno a 100 tokens, con tono empático y la recomendación debe estar bien argumentada. Su contexto es: {context_description}."
+            system_role = f"Asume el rol de un psicólogo que está recogiendo información sobre el estado emocional de su paciente y las situaciones que lo rodean para entender mejor cómo ayudarle. Genera mensajes breves, para simular una conversación por chat más cotidiana, que tengan en cuenta las emociones y entidades, e indaguen más en ello. ***PROHIBIDO referirse a los datos recopilados. Su contexto es {context_description}."
         
         return system_role
 
