@@ -38,6 +38,11 @@ class FeatureExtractor:
         return self.entities
 
     def clean_entities(self, raw_entities):
+        """
+        Process and clean the raw extracted entities
+        Args:
+            raw_entities (dict): Extracted entities
+        """
         current_entity = []
         master_entities = {
             'PER': 'people',
@@ -77,10 +82,10 @@ class FeatureExtractor:
         """
         Extract emotion from user's input message.
         """
-        # Analizar emociones en el texto usando el extractor de emociones (Robertuito)
+        #  Analysing emotions in text using the emotion extractor (Robertuito)
         result = self.emotion_extractor.predict(self.text)
 
-        # Almacenar las probabilidades de cada emoción en el atributo self.emotions
+        # Store the probabilities of each emotion in the attribute self.emotions
         self.emotions = result.probas
         return result.output
 
@@ -121,7 +126,7 @@ def feature_extraction(user_input):
         user_input (str): The text message to process.
 
     Returns:
-        features_dict: A dictionary with extracted features.
+        features_dict (dict): A dictionary with extracted features.
     """
     featurer = FeatureExtractor(text = user_input)
     featurer.get_entities()

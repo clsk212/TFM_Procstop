@@ -5,7 +5,7 @@
 {% block content %}
 <div class="analytics-container" style="margin-bottom: 35px; margin-top: 35px;">
 
-    <!-- Pestañas para seleccionar el gráfico -->
+    <!-- Tabs to select the chart -->
     <div class="analytics-tab">
         <button class="tablinks" onclick="openTab(event, 'EmotionPie')">Emotion Pie Chart</button>
         <button class="tablinks" onclick="openTab(event, 'EmotionEvolution')">Emotion Evolution</button>
@@ -16,7 +16,7 @@
         <button class="tablinks" onclick="openTab(event, 'LeastPositive')">Least Positive Entities</button>
     </div>
 
-    <!-- Contenido de cada pestaña -->
+    <!-- Content of each tab -->
     <div id="EmotionPie" class="analytics-tabcontent">
         <img src="{{ url_for('emotion_pie_chart') }}" alt="Emotion Pie Chart">
     </div>
@@ -47,28 +47,28 @@
 </div>
 
 <script>
-// Función para cambiar entre pestañas
+// Function to switch between tabs
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
 
-    // Ocultar todo el contenido de las pestañas
+    // Hide all tab content
     tabcontent = document.getElementsByClassName("analytics-tabcontent");
     for (i = 0; i < tabcontent.length; i++) {
         tabcontent[i].style.display = "none";
     }
 
-    // Quitar la clase "active" de todos los botones
+    // Remove the ‘active’ class from all the buttons.
     tablinks = document.getElementsByClassName("tablinks");
     for (i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
 
-    // Mostrar la pestaña actual y añadir la clase "active" al botón que se ha hecho clic
+    // Show the current tab and add the class ‘active’ to the button that has been clicked.
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
 }
 
-// Mostrar la primera pestaña por defecto
+// Show the first tab by default
 document.getElementsByClassName("tablinks")[0].click();
 </script>
 {% endblock %}

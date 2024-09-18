@@ -5,7 +5,7 @@
     <div class="settings-container centered-container">
         <h2>Configuración del Usuario</h2>
         
-        <!-- Formulario en dos columnas -->
+        <!-- Two-column form -->
         <form action="{{ url_for('settings') }}" method="post" class="settings-form">
             <div class="form-column">
                 <label for="name">Nombre Completo:</label>
@@ -35,7 +35,7 @@
                     <option value="en" {% if settings.language == 'en' %} selected {% endif %}>English</option>
                 </select>
 
-                <!-- Campos para cambiar la contraseña -->
+                <!-- Fields to change the password -->
                 <label for="password">Nueva Contraseña:</label>
                 <input type="password" id="password" name="password">
 
@@ -44,14 +44,14 @@
             </div>
         </form>
 
-        <!-- Botón de actualizar configuraciones horizontal -->
+        <!-- Horizontal update settings button -->
         <div class="form-actions">
             <form action="{{ url_for('settings') }}" method="post">
                 <input type="submit" value="Actualizar Configuraciones" class="btn-update-long">
             </form>
         </div>
 
-        <!-- Botones en una fila para cerrar sesión, borrar datos, y eliminar cuenta -->
+        <!-- Buttons in a row to log out, delete data, and delete account -->
         <div class="button-group">
             <form action="{{ url_for('logout') }}" method="post">
                 <button type="submit" class="btn-action">Cerrar Sesión</button>

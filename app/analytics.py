@@ -1,18 +1,10 @@
-
-import matplotlib.pyplot as plt
-from collections import Counter
-import pandas as pd
-from datetime import datetime
-from bson import ObjectId
+# Local imports
 import io
-import matplotlib
-import tempfile
-import shutil
-import os
+# Third party imports
 import numpy as np
-import matplotlib.colors as mcolors
-import time 
-
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 
 def clean_emotions(df):

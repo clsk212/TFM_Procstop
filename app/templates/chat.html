@@ -39,9 +39,8 @@
             event.preventDefault();
             const message = messageInput.value.trim();
             if (message) {
-                messageInput.value = ''; // Clear input box
+                messageInput.value = ''; 
                 displayMessage(message, 'user');
-                // Enviar post
                 fetch('/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -61,7 +60,7 @@
             content.textContent = message;
             messageDiv.appendChild(content);
             chatLog.appendChild(messageDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
+            chatLog.scrollTop = chatLog.scrollHeight;
         }
 
         // Allow pressing enter to send message

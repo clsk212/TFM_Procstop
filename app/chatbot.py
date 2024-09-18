@@ -72,6 +72,9 @@ class Chatbot:
     def is_ready_for_recommendation(self):
         """
         Check if there exist enough entities and emotions detected in the chat to recommend activities
+
+        Return:
+            result (bool): True if there is enough data to make a recommendation
         """
         emotions_list = self.context['emotions']
 
@@ -123,6 +126,9 @@ class Chatbot:
     def get_system_role(self):
         """
         Context formatting as system role for the chatbot input
+
+        Returns:
+            system_role (str): Customized system role for OpenAI API
         """
         context_description = "\n".join([
         f"- Género del usuario: {self.gender}",
@@ -150,8 +156,11 @@ class Chatbot:
             user_input (str): User input message
             response (str): Bot response
             features_dict (dict): Detected features on user's input message
+
+        Return:
+            update_result (dict): Information about saving in mongo process
         """
-        print('>> Saving conversation...')
+        print('>>> Saving conversation...')
         
         # Preprocess entities
         entities_update = {}
@@ -187,7 +196,7 @@ class Chatbot:
                 }
             }
         )
-        
+        print('<<< Conversation already saved.')
         return update_result
 
     def get_response(self, user_input):
@@ -196,6 +205,8 @@ class Chatbot:
         
         Args:
             user_input (str): User input message
+        Return:
+            message (str): Chatbot response to user's input
         """
         try: 
             # Redact system role with context

@@ -1,3 +1,4 @@
+# Third party imports
 from bson import ObjectId
 
 def get_user_settings(db, user_id):
@@ -10,7 +11,7 @@ def get_user_settings(db, user_id):
         return {
             'name': '',
             'username': '',
-            'language': 'es',  # Valor por defecto
+            'language': 'es',
         }
     
     return {
