@@ -88,7 +88,7 @@ header .header-title{
 .btn-welcome {
     margin-top: 5cm;  /* Ajuste vertical */
     display: inline-block;
-    padding: 10px 20px;
+    padding: 20px 40px;
     margin: 20px;
     background-color: #000000;  /* Color de fondo verde */
     color: white;               /* Texto blanco para contraste */
@@ -500,13 +500,12 @@ h1 {
 
 .btn-welcome {
     display: inline-block;
-    padding: 10px 20px;
+    padding: 20px 40px;
     margin: 10px;
     background-color: #333;
     color: #fff;
     text-decoration: none;
     border-radius: 5px;
-    font-size: 16px;
     transition: background-color 0.3s ease;
 }
 

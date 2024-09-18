@@ -147,7 +147,7 @@ class DataAnalyzer():
         """
 
         # Filepath definition
-        filename_irony = f'irony_evolution_{int(time.time())}.png'
+        filename_irony = f'irony_evolution.png'
         temp_file_path = os.path.join(self.image_dir, filename_irony)
 
         # Delete empty
@@ -196,7 +196,7 @@ class DataAnalyzer():
             return None
 
         # Path definition
-        filename_pie = f'emotion_pie_{int(time.time())}.png'
+        filename_pie = f'emotion_pie.png'
         temp_file_path = os.path.join(self.image_dir, filename_pie)
 
         # Data cleaning
@@ -249,7 +249,7 @@ class DataAnalyzer():
             return None
         
         # Path definition
-        filename_emotion = f'emotion_time.png'
+        filename_emotion = f'emotion_evolution.png'
         temp_file_path = os.path.join(self.image_dir, filename_emotion)
 
         # Data cleaning
@@ -299,7 +299,7 @@ class DataAnalyzer():
             return None
 
         # Path definition
-        filename_most_pos = f'most_positive_entities_{int(time.time())}.png'
+        filename_most_pos = f'most_positive_entities.png'
         temp_file_path = os.path.join(self.image_dir, filename_most_pos)
         
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -330,7 +330,7 @@ class DataAnalyzer():
             return None
 
         # Path definition
-        filename_least_pos = f'least_positive_entities_{int(time.time())}.png'
+        filename_least_pos = f'least_positive_entities.png'
         temp_file_path = os.path.join(self.image_dir, filename_least_pos)
         
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -363,7 +363,7 @@ class DataAnalyzer():
         }).reset_index()
 
         # Path definition
-        filename_hate = f'hate_evolution_{int(time.time())}.png'
+        filename_hate = f'hate_evolution.png'
         temp_file_path = os.path.join(self.image_dir, filename_hate)
 
         img = io.BytesIO()

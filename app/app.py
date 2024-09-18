@@ -7,7 +7,7 @@ import os
 import time
 
 # Third party imports
-from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory
+from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory, abort
 from flask_bcrypt import Bcrypt
 from flask import flash
 from bson import ObjectId
@@ -42,7 +42,7 @@ client = MongoClient(uri,server_api=pymongo.server_api.ServerApi(version="1", st
 db = client['procstop']
 
 # Temporal directory
-analytics_dir = './analytics/'
+analytics_dir = os.path.join(os.getcwd(), 'analytics')
 if not os.path.exists(analytics_dir):
     os.makedirs(analytics_dir)
 
@@ -346,62 +346,138 @@ def logout():
     return redirect(url_for('welcome'))
 
 ### Plot functions
-
+# Emotion Pie Chart
 @app.route('/analytics/emotion_pie.png')
 def emotion_pie_chart():
     filename = analyzer.plot_emotion_pie_chart()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate emotion pie chart", 404
 
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
+
+# Emotion Evolution Plot
 @app.route('/analytics/emotion_evolution.png')
 def emotion_evolution():
     filename = analyzer.plot_emotion_evolution_over_time()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate emotion evolution plot", 404
 
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
+
+# Sentiments Over Time Plot
 @app.route('/analytics/sentiments.png')
 def sentiments_plot():
     filename = analyzer.plot_sentiments_over_time()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate sentiment plot", 404
 
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
+
+# Most Positive Entities Plot
 @app.route('/analytics/most_positive_entities.png')
 def most_positive_entities():
     filename = analyzer.plot_most_positive_entities()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate most positive entities plot", 404
 
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
+
+# Least Positive Entities Plot
 @app.route('/analytics/least_positive_entities.png')
 def least_positive_entities():
     filename = analyzer.plot_least_positive_entities()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate least positive entities plot", 404
 
-@app.route('/analytics/hate_speech_evolution.png')
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
+
+# Hate Speech Evolution Plot
+@app.route('/analytics/hate_evolution.png')
 def hate_speech_evolution():
     filename = analyzer.plot_hate_speech_evolution()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate hate speech evolution plot", 404
 
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
+
+# Irony Evolution Plot
 @app.route('/analytics/irony_evolution.png')
 def irony_evolution():
     filename = analyzer.plot_irony_evolution()
-    if filename:
-        return send_from_directory('analytics', filename)
-    else:
-        return "No data to generate irony evolution plot", 404
+
+    full_path = os.path.abspath(os.path.join(analytics_dir, filename))
+    print(f"Full path: {full_path}")
+
+    if not filename or not os.path.exists(full_path):
+        print("File not found or not generated.")
+        return abort(404, description="File not found or not generated")
+
+    try:
+        return send_from_directory(os.path.abspath(analytics_dir), filename)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500, description="Error serving file")
+
 
 @app.route('/analytics')
 def analytics_page():
