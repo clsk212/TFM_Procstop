@@ -1,22 +1,44 @@
-### Building and running your application
+# PROCSTOP 
+- PROCSTOP es un chatbot emocional con el objetivo de apoyar a las personas en su momento de debilidad y recomendarles actividades para mejorar su estado de ánimo.
+- Se trata de una aplicación web desarrollada principalmente con Flask (Python), MongoDB Atlas, y la API de OpenAI. 
+- La aplicación está empaquetada en una imagen Docker para facilitar su ejecución sin necesidad de instalar Python o configurar dependencias adicionales.
+## Instrucciones para ejecutar la aplicación Procstop
+### Requisitos previos
+- Instalar Docker
+Si Docker no está instalado en tu sistema, sigue los pasos correspondientes según tu sistema operativo:
 
-When you're ready, start your application by running:
-`docker compose up --build`.
+- Windows y Mac
+- Descarga Docker Desktop desde Docker Desktop Download y sigue las instrucciones de instalación.
 
-Your application will be available at http://localhost:8000.
+- Reinicia tu computadora si es necesario.
 
-### Deploying your application to the cloud
+- Verifica que Docker esté instalado correctamente abriendo una terminal y ejecutando el siguiente comando:
 
-First, build your image, e.g.: `docker build -t myapp .`.
-If your cloud uses a different CPU architecture than your development
-machine (e.g., you are on a Mac M1 and your cloud provider is amd64),
-you'll want to build the image for that platform, e.g.:
-`docker build --platform=linux/amd64 -t myapp .`.
 
-Then, push it to your registry, e.g. `docker push myregistry.com/myapp`.
+docker --version
+Linux
+Sigue esta guía para instalar Docker en tu distribución de Linux: Guía de instalación de Docker en Linux.
 
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
+- Verifica la instalación con el siguiente comando:
 
-### References
-* [Docker's Python guide](https://docs.docker.com/language/python/)
+docker --version
+
+- Descargar imagen de Docker Hub
+    Si la imagen está disponible en Docker Hub, puedes descargarla directamente ejecutando el siguiente comando:
+    docker pull clsk212/procstop_app:latest
+
+- Ejecutar la aplicación
+    Una vez que tengas la imagen cargada, puedes seguir estos pasos para ejecutar la aplicación:
+
+    1. Ejecutar el contenedor
+        Ejecuta el siguiente comando para iniciar la aplicación:
+
+        docker run -p 5000:5000 procstop_app:latest
+        Esto ejecutará la aplicación y la expondrá en el puerto 5000. Para acceder a la aplicación, abre tu navegador y visita la siguiente URL:
+
+        http://localhost:5000
+
+    2. Parar el contenedor
+    Para detener la aplicación, puedes hacer lo siguiente:
+
+    Presiona CTRL + C en la terminal donde está ejecutándose el contenedor.
