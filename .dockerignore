@@ -11,7 +11,7 @@
 **/.toolstarget
 **/.vs
 **/.vscode
-**/.tar
+procstop.tar
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
