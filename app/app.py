@@ -7,27 +7,23 @@ import os
 import time
 
 # Third party imports
-from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory, make_response, send_file
-from flask_pymongo import PyMongo
+from flask import Flask, render_template, redirect, request, url_for, session, jsonify, flash, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask import flash
 from bson import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import pymongo
-import openpyxl
-import atexit
 import shutil
-import tempfile
 import os
 
 TF_ENABLE_ONEDNN_OPTS=0
 
 # Project imports
-from chatbot import Chatbot
-from feature_extraction import feature_extraction
-from settings import *
-from analytics import *
+from app.chatbot import Chatbot
+from app.feature_extraction import feature_extraction
+from app.settings import *
+from app.analytics import *
 
 load_dotenv()
 # Flask app configuration
@@ -46,21 +42,13 @@ client = MongoClient(uri,server_api=pymongo.server_api.ServerApi(version="1", st
 db = client['procstop']
 
 # Temporal directory
-temp_image_dir = tempfile.mkdtemp()
+analytics_dir = './analytics/'
+if not os.path.exists(analytics_dir):
+    os.makedirs(analytics_dir)
 
 # Chatbot initialization
 procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", db = db)
-analyzer = DataAnalyzer(db=db, conversation_id=procstop.conversation_id, image_dir='./analytics/')
-
-
-def cleanup_temp_dir():
-    """
-    Delete temporal folder when flask is closed.
-    """
-    shutil.rmtree('./analytics/')
- 
-# Set cleanup_temp_dir when logging out
-atexit.register(cleanup_temp_dir)
+analyzer = DataAnalyzer(db=db, conversation_id=procstop.conversation_id, image_dir=analytics_dir)
 
 def hash_password(password):
     """
@@ -358,13 +346,6 @@ def logout():
     return redirect(url_for('welcome'))
 
 ### Plot functions
-@app.route('/temp_images/<filename>')
-def temp_images(filename):
-    return send_from_directory(temp_image_dir, filename)
-
-@app.route('/images/<path:filename>')
-def send_image(filename):
-    return send_from_directory('path/to/save', filename)
 
 @app.route('/analytics/emotion_pie.png')
 def emotion_pie_chart():
@@ -425,12 +406,15 @@ def irony_evolution():
 @app.route('/analytics')
 def analytics_page():
     analyzer.get_history()  # Cargar la historia del usuario antes de renderizar la página
-    # analyzer.save_all_dfs_to_excel('./analytics/')
+    # analyzer.save_all_dfs_to_excel(analytics_dir)
     return render_template('analytics.html', analyzer=analyzer)
 
 if __name__ == '__main__':
     try:
-        app.run(debug=True)
+        port = int(os.environ.get('PORT', 8000))
+        host = os.environ.get('HOST', '0.0.0.0')
+        print(f"App running at http://{host}:{port}")
+        app.run(debug=True,host=host, port=port)
     except OSError as e:
         if e.winerror == 10038:
             print("Attempted operation on an invalid socket.")
