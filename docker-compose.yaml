@@ -6,6 +6,10 @@ services:
     container_name: flask_app
     ports:
       - "8000:8000"
+    
+    env_file:
+      - .env
+
     environment:
       - MONGO_URI=${MONGO_URI}
       - API_KEY=${API_KEY}
@@ -13,12 +17,12 @@ services:
       - PYTHONPATH=/app
       - TRANSFORMERS_CACHE=/tmp/huggingface_cache
       - MPLCONFIGDIR=/tmp/matplotlib
+    
     command: gunicorn -b :8000 app.app:app --workers 1 --timeout 120
-
-    env_file:
-      - .env
+    
     volumes:
       - ./analytics:/app/analytics
+    
     networks:
       - flask_network
 

@@ -11,6 +11,7 @@
 **/.toolstarget
 **/.vs
 **/.vscode
+**/.tar
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
