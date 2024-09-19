@@ -13,53 +13,78 @@
 - [Licencia](#licencia)
 
 ## Instalación
+### Instalación Python 3.12
+Para lanzar la aplicación es necesario tener instalado Python 3.12.
+Para comprobar la versión que tenemos instalada podemos ejecutar uno de los siguientes comandos
+```
+python --version
+```
+![image](https://github.com/user-attachments/assets/c322f43b-30b4-410a-b8d9-2cd599f23b06)
+```
+py -0
+```
+![image](https://github.com/user-attachments/assets/e768f89f-a1d2-4c0b-9c40-d832da782954)
 
-### **Instalar Docker**  
-Si Docker no está instalado en tu sistema, sigue los pasos correspondientes según tu sistema operativo:
+En caso de no tener la versión correcta de Python, ejecuta el siguiente comando para su instalación:
+- **Windows**  
+```
+winget search Python.Python.3.12
+```
+- **Linux (Ubuntu)**
+```
+sudo apt update && sudo apt upgrade -y
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.12
+```
 
-- **Windows y Mac**  
-  Descarga Docker Desktop desde el [sitio oficial](https://www.docker.com/products/docker-desktop) y sigue las instrucciones de instalación.
+### Instalación de librerías
+Este proyecto utiliza diferentes librerías lo que implica que el proceso de instalación puede demorarse.
+Se pueden seguir dos caminos:
+#### Instalación de librerías dentro de un Entorno Virtual venv. (Recomendado)
+- **Windows** :
+(Asegúrate de estar en la ruta del proyecto)
+```
+python -m venv nombre_del_entorno
+nombre_del_entorno/Scripts/activate
+py -m pip install -r .\requirements.txt
+```
+- **Linux (Ubuntu)**: (Asegúrate de estar en la ruta del proyecto)
+```
+python3 -m venv nombre_del_entorno
+source nombre_del_entorno/bin/activate
+py -m pip install -r .\requirements.txt
+```
 
-  Verifica que Docker esté instalado correctamente abriendo una terminal y ejecutando el siguiente comando:
-
-  ```bash
-  docker --version
-  ```
-
-- **Linux**  
-  Sigue esta [guía](https://docs.docker.com/engine/install/) para instalar Docker en tu distribución de Linux.
-
-  Verifica la instalación con el siguiente comando:
-
-  ```bash
-  docker --version
-  ```
-
-### Descargar imagen de Docker Hub
-Si la imagen está disponible en Docker Hub, puedes descargarla directamente ejecutando el siguiente comando:
-
-```bash
-docker pull clsk212/procstop_app:latest
+#### Instalación de librerías directamente en tu ordenador.
+- **Windows / Linux (Ubuntu)** (Asegúrate de estar en la ruta del proyecto)
+```
+py -m pip install -r ./requirements.txt
 ```
 
 ## Uso
-Una vez que tengas la imagen cargada, puedes seguir estos pasos para ejecutar la aplicación:
+Una vez se tiene Python 3.12 instalado y las librerías instaladas (en local o en un venv)
+el proyecto ya puede ejecutarse.
+Para ello únicamente hay que ejecutar el archivo **app.py** y abrir el host:
+- **Windows** :
+```
+python app/app.py
+```
+- **Linux (Ubuntu)**:
+```
+python3.12 app/app.py
+```
+Al ejecutarlo se habilitará, al menos, un puerto local donde se lanzará la web.
+Para acceder puedes hacer Control + Click en los enlaces http
 
-1. **Ejecutar el contenedor**  
-   Ejecuta el siguiente comando para iniciar la aplicación:
+![image](https://github.com/user-attachments/assets/fb2a0d35-7dd6-4abd-884f-98153b2c5c32)
 
-   ```bash
-   docker run -p 5000:5000 clsk212/procstop_app:latest
-   ```
+o abrir tu navegador predeterminado y escribir en la barra superior localhost (se autocompletará)
 
-   Esto ejecutará la aplicación y la expondrá en el puerto 5000. Para acceder a la aplicación, abre tu navegador y visita la siguiente URL:
-
-   ```
-   http://localhost:5000
-   ```
+![image](https://github.com/user-attachments/assets/4a37e7b2-ef13-4524-9635-5727dca603db)
 
 ## Contribución
-Si deseas contribuir a este proyecto:
+Si deseas contribuir a este proyecto:pueda
 1. Haz un fork del repositorio.
 2. Crea una nueva rama (`git checkout -b feature/nueva-feature`).
 3. Haz commit de tus cambios (`git commit -m 'Añadir nueva feature'`).
