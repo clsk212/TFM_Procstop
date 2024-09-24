@@ -40,31 +40,39 @@ sudo apt install python3.12
 
 ### Instalación de librerías
 Este proyecto utiliza diferentes librerías lo que implica que el proceso de instalación puede demorarse.
-Se pueden seguir dos caminos:
-#### Instalación de librerías dentro de un Entorno Virtual venv. (Recomendado)
+Se recomienda utilizar un entorno virtual para no saturar tu entorno local.
+#### Instalación de librerías dentro de un Entorno Virtual venv.
 - **Windows** :
 (Asegúrate de estar en la ruta del proyecto)
+Primero comprobamos si venv está disponible, si el siguiente comando no da error,  entonces está disponible:
 ```
-python -m venv nombre_del_entorno
-nombre_del_entorno/Scripts/activate
+python -m venv --help
+```
+Ahora vamos a crear el entorno virtual para nuestro proyecto, activarlo y a instalarle todas las librerías desde un requirements:
+```
+python -m venv procstop
+procstop/Scripts/activate
 py -m pip install -r .\requirements.txt
 ```
 - **Linux (Ubuntu)**: (Asegúrate de estar en la ruta del proyecto)
+Primero comprobamos si venv está disponible, si el siguiente comando no da error,  entonces está disponible:
 ```
-python3 -m venv nombre_del_entorno
-source nombre_del_entorno/bin/activate
+sudo apt update
+sudo apt install python3-venv
+```
+Ahora vamos a crear el entorno virual para nuestro proyecto, activarlo y a instalarle todas las librerías desde un requeriments:
+```
+python3 -m venv procstop
+source procstop/bin/activate
 py -m pip install -r .\requirements.txt
-```
-
-#### Instalación de librerías directamente en tu ordenador.
-- **Windows / Linux (Ubuntu)** (Asegúrate de estar en la ruta del proyecto)
-```
-py -m pip install -r ./requirements.txt
 ```
 
 ## Uso
 Una vez se tiene Python 3.12 instalado y las librerías instaladas (en local o en un venv)
 el proyecto ya puede ejecutarse.
+Importante asegurarse de que el entorno está activado correctamente, debería aparecer el nombre del entorno
+a la izquierda del nuevo comando en la terminal.
+** 
 Para ello únicamente hay que ejecutar el archivo **app.py** y abrir el host:
 - **Windows** :
 ```
