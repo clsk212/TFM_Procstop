@@ -9,7 +9,7 @@ class Chatbot:
     """
     Chatbot logic including bot response and db management
     """
-    def __init__(self, api_key, language="ES", model="gpt-4", db=None, gender='Other'):
+    def __init__(self, api_key, language="ES", model="gpt-4o-mini", db=None, gender='Other'):
         """
         Chatbot object initialization
 
@@ -34,8 +34,12 @@ class Chatbot:
             "people": [],
             "places": [],
             "orgs": [],
-            "emotion_trigger": None
+            "emotion_trigger": None,
+            "sentiment": "No disponible",
+            "hate": "No disponible",
+            "irony": "No disponible",
         }
+
 
     def start_conver(self):
         """
@@ -213,7 +217,7 @@ class Chatbot:
             system_prompt = self.get_system_role()
 
             # Query the chatbot for a response
-            if self.is_ready_for_recommendation:
+            if self.is_ready_for_recommendation():
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=[

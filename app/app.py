@@ -46,7 +46,7 @@ if not os.path.exists(analytics_dir):
     os.makedirs(analytics_dir)
 
 # Chatbot initialization
-procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4", db = db)
+procstop = Chatbot(api_key=app.config["API_KEY"], language = 'ES', model = "gpt-4o-mini", db = db)
 analyzer = DataAnalyzer(db=db, conversation_id=procstop.conversation_id, image_dir=analytics_dir)
 
 def hash_password(password):
