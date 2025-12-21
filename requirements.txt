@@ -11,3 +11,7 @@ dnspython==2.6.1
 
 requests==2.32.3
 openai==1.46.0
+
+numpy==1.26.4
+pandas==2.2.2
+matplotlib==3.9.2
