@@ -20,7 +20,7 @@ TF_ENABLE_ONEDNN_OPTS=0
 
 # Project imports
 from app.chatbot import Chatbot
-from app.feature_extraction import feature_extraction
+#from app.feature_extraction import feature_extraction
 from app.settings import *
 from app.analytics import *
 
@@ -203,7 +203,17 @@ def chat():
         return jsonify({"error": "No message provided"}), 400
 
     # Input message processing
-    features_dict = feature_extraction(user_message)
+    features_dict = {}
+    try:
+        from app.feature_extraction import feature_extraction
+    except ImportError:
+        feature_extraction = None
+
+    if feature_extraction is not None:
+        try:
+            features_dict = feature_extraction(user_message)
+        except Exception:
+            features_dict = {}
 
     # Update conversation context
     procstop.update_context(features_dict)
