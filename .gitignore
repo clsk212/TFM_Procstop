@@ -4,3 +4,6 @@ bin/
 lib*
 *.cfg
 share/
+*.stats
+profile.stats
+profile.log

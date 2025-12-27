@@ -499,7 +499,7 @@ if __name__ == '__main__':
         port = int(os.environ.get('PORT', 8000))
         host = os.environ.get('HOST', '0.0.0.0')
         print(f"App running at http://{host}:{port}")
-        app.run(debug=True,host=host, port=port)
+        app.run(debug=True,host=host, port=port, use_reloader=False)
     except OSError as e:
         if e.winerror == 10038:
             print("Attempted operation on an invalid socket.")
